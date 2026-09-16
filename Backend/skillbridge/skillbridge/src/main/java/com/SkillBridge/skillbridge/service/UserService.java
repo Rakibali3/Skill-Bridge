@@ -1,5 +1,6 @@
 package com.SkillBridge.skillbridge.service;
 
+import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
 import com.SkillBridge.skillbridge.ExceptionHandling.EmailAlreadyExistsException;
 import com.SkillBridge.skillbridge.ExceptionHandling.InvalidCredentialsException;
 import com.SkillBridge.skillbridge.dto.LoginRequestDto;
@@ -10,6 +11,7 @@ import com.SkillBridge.skillbridge.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.stereotype.Service;
@@ -21,7 +23,6 @@ import java.util.Locale;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
 
     public User signup(SignupRequestDto request) {
@@ -76,5 +77,11 @@ public class UserService {
                 .email(user.getEmail())
                 .userName(user.getUserName())
                 .build();
+    }
+
+    public User isAuthenticated(Authentication authentication) {
+        String Email = authentication.getName();
+        return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
+                new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
     }
 }

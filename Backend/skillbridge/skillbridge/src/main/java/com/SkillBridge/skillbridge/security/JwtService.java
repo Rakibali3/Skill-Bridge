@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -19,55 +18,41 @@ public class JwtService {
     private String secretKey;
 
     public String generateToken(String email, boolean rememberMe) {
-       long expiry = getExpiry(rememberMe);
-        if(rememberMe){
-            expiry = 24L * 60 * 60 * 1000;
-        }else{
-            expiry = 10L * 60 * 1000;
-        }
+
+        long expiry = getExpiry(rememberMe);
+
+        Date now = new Date();
+
+        Date expiration = new Date(now.getTime() + expiry);
+
         return Jwts.builder()
                 .subject(email)
-                .issuedAt(new Date())
-                .expiration(
-                        new Date(System.currentTimeMillis() + expiry)
-                )
+                .issuedAt(now)
+                .expiration(expiration)
                 .signWith(getSecretKey())
                 .compact();
     }
 
     public long getExpiry(boolean rememberMe) {
-        if(rememberMe){
+        if (rememberMe) {
             return 24L * 60 * 60 * 1000;
-        }else {
-            return 10L * 60 * 1000;
         }
+        return 10L * 60 * 1000;
     }
-
 
     public String extractEmailFromToken(String token) {
-
-        return parseToken(token)
-                .getSubject();
+        return parseToken(token).getSubject();
     }
 
-
     public boolean isValidToken(String token) {
-
         try {
-
             Claims claims = parseToken(token);
-
             Date expiration = claims.getExpiration();
-
-            return expiration != null
-                    && expiration.after(new Date());
-
+            return expiration != null && expiration.after(new Date());
         } catch (Exception exception) {
-
             return false;
         }
     }
-
 
     private Claims parseToken(String token) {
 
@@ -79,9 +64,6 @@ public class JwtService {
     }
 
     private SecretKey getSecretKey() {
-
-        return Keys.hmacShaKeyFor(
-                secretKey.getBytes(StandardCharsets.UTF_8)
-        );
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 }

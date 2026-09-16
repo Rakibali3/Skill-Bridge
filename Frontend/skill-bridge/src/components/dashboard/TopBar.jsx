@@ -146,7 +146,7 @@ export default function TopBar({ onMenuClick }) {
 
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
               >
                 <LogOut size={17} />
                 Logout

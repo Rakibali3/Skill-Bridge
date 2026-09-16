@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,6 +20,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final CookieService cookieService;
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -33,12 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String email = jwtService.extractEmailFromToken(token);
 
                 // Make sure request is not already authenticated
-                if (
-                        email != null
-                                && SecurityContextHolder
-                                .getContext()
-                                .getAuthentication() == null
-                ) {
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                     email,
@@ -52,12 +49,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     // Store authentication
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+            }else {
+                clearAuthentication(response);
             }
         }catch(Exception exception){
-            // Invalid or expired JWT
-            SecurityContextHolder.clearContext();
+            clearAuthentication(response);
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void clearAuthentication(HttpServletResponse response) {
+        SecurityContextHolder.clearContext();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieService
+                .deleteAccessTokenCookie().toString());
     }
 
     private String getTokenFromCookie(HttpServletRequest request) {

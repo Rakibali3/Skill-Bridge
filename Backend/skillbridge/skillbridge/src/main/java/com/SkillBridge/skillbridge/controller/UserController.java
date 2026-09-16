@@ -7,15 +7,18 @@ import com.SkillBridge.skillbridge.dto.SignupResponseDto;
 
 import com.SkillBridge.skillbridge.entity.User;
 
+import com.SkillBridge.skillbridge.repository.UserRepository;
+import com.SkillBridge.skillbridge.security.CookieService;
 import com.SkillBridge.skillbridge.security.JwtService;
 import com.SkillBridge.skillbridge.service.UserService;
-
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
@@ -24,6 +27,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
+@Slf4j
 @RestController
 
 @RequiredArgsConstructor
@@ -32,6 +38,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final CookieService cookieService;
 
     @PostMapping("/signup")
     public ResponseEntity<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
@@ -54,35 +61,27 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request){
-        LoginResponseDto existingUser =  userService.login(request);
-        String token = jwtService.generateToken(existingUser.getEmail(),request.isRememberMe());
-        ResponseCookie responseCookie = ResponseCookie.from("accessToken", token)
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(jwtService.getExpiry(request.isRememberMe())/1000)
-                .sameSite("Lax")
-                .build();
-        existingUser.setToken(token);
-       return ResponseEntity.ok().header("Set-Cookie",responseCookie.toString())
-               .body(existingUser);
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
+        LoginResponseDto existingUser = userService.login(request);
+        String token = jwtService.generateToken(existingUser.getEmail(), request.isRememberMe());
+        long expiry = jwtService.getExpiry(request.isRememberMe());
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                cookieService.createAccessTokenCookie(token, expiry).toString());
+        return ResponseEntity.ok(existingUser);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
 
-        ResponseCookie responseCookie =
-                ResponseCookie.from("accessToken", "")
-                        .httpOnly(true)
-                        .secure(false)
-                        .path("/")
-                        .maxAge(0)
-                        .sameSite("Lax")
-                        .build();
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                cookieService.deleteAccessTokenCookie().toString());
 
-        return ResponseEntity.ok()
-                .header("Set-Cookie", responseCookie.toString())
-                .body("Logged out successfully");
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    @GetMapping("/authenticated")
+    public ResponseEntity<?> isAuthenticated(Authentication authentication) {
+        User user =  userService.isAuthenticated(authentication);
+        return ResponseEntity.ok(user.getEmail());
     }
 }

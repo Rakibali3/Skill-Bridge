@@ -40,10 +40,4 @@ public class ProfileUpdateRequestDto {
             message = "Availability cannot exceed 100 characters"
     )
     private String availability;
-
-    @Size(
-            max = 500,
-            message = "Avatar URL cannot exceed 500 characters"
-    )
-    private String avatarUrl;
 }

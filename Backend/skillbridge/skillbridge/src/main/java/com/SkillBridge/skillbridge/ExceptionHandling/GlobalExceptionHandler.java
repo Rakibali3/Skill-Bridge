@@ -47,6 +47,19 @@ public class GlobalExceptionHandler {
     }
 
 
+    // Inside GlobalExceptionHandler.java
+    @ExceptionHandler(AuthenticatedUserNotFoundException.class)
+    public ResponseEntity<Map<String, String>>
+    handleUserNotFound(AuthenticatedUserNotFoundException exception) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        errors.put("email", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(errors);
+    }
+
+
     @ExceptionHandler(
             MethodArgumentNotValidException.class
     )

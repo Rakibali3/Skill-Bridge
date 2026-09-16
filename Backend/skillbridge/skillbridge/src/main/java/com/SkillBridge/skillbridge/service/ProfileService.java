@@ -1,11 +1,15 @@
 package com.SkillBridge.skillbridge.service;
 
+import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
+import com.SkillBridge.skillbridge.dto.AvatarUpdateRequestDto;
 import com.SkillBridge.skillbridge.dto.ProfileResponseDto;
 import com.SkillBridge.skillbridge.dto.ProfileUpdateRequestDto;
 import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.entity.UserProfile;
 import com.SkillBridge.skillbridge.repository.UserProfileRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,7 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
 
+    @Transactional
     public ProfileResponseDto getProfile(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         UserProfile profile = userProfileRepository.findByUserId(user.getId()).orElseGet(()
@@ -23,6 +28,7 @@ public class ProfileService {
         return convertToResponse(user,profile);
     }
 
+    @Transactional
     public ProfileResponseDto updateProfile(Authentication authentication, ProfileUpdateRequestDto request) {
         User user = getAuthenticatedUser(authentication);
         UserProfile profile = userProfileRepository.findByUserId(user.getId()).orElseGet(()
@@ -34,11 +40,25 @@ public class ProfileService {
         profile.setLearningStyle(request.getLearningStyle());
         profile.setPreferredFormat(request.getPreferredFormat());
         profile.setAvailability(request.getAvailability());
-        profile.setAvatarUrl(request.getAvatarUrl());
 
         userProfileRepository.save(profile);
 
         return convertToResponse(user,profile);
+    }
+
+    @Transactional
+    public ProfileResponseDto updateAvatar(Authentication authentication, AvatarUpdateRequestDto request) {
+        User user = getAuthenticatedUser(authentication);
+
+        UserProfile profile = userProfileRepository
+                .findByUserId(user.getId())
+                .orElseGet(() -> createEmptyProfile(user));
+
+        profile.setAvatarUrl(request.getAvatarUrl());
+
+        userProfileRepository.save(profile);
+
+        return convertToResponse(user, profile);
     }
 
     private ProfileResponseDto convertToResponse(User user, UserProfile profile) {
@@ -67,7 +87,8 @@ public class ProfileService {
     private User getAuthenticatedUser(Authentication authentication) {
         String Email = authentication.getName();
         return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
-                new RuntimeException("Authenticated User Not Found"));
+                new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
     }
 
 }
+

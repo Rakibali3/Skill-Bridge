@@ -5,6 +5,7 @@ import LoginPage from "../components/features/auth/pages/LoginPage";
 import DashBoard from "../components/pages/DashBoard";
 import ProfilePage from "../components/pages/ProfilePage";
 import MySkillsPage from "../components/pages/MySkillsPage";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 function AppRoutes() {
@@ -15,12 +16,12 @@ function AppRoutes() {
       <Route path="/signup" element={<SignupPage/>} />
 
       <Route path="/login" element={<LoginPage/>} />
-
-      <Route path="/dashboard" element={<DashBoard/>} />
-
-      <Route path="/profile" element={<ProfilePage/>} />
-
-      <Route path="/my-skills" element={<MySkillsPage/>} />
+      
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashBoard />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/my-skills" element={<MySkillsPage />} />
+      </Route>
 
     </Routes>
   );

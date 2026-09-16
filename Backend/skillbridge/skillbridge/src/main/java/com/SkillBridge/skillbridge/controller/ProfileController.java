@@ -1,5 +1,6 @@
 package com.SkillBridge.skillbridge.controller;
 
+import com.SkillBridge.skillbridge.dto.AvatarUpdateRequestDto;
 import com.SkillBridge.skillbridge.dto.ProfileResponseDto;
 import com.SkillBridge.skillbridge.dto.ProfileUpdateRequestDto;
 import com.SkillBridge.skillbridge.service.ProfileService;
@@ -21,10 +22,20 @@ public class ProfileController {
        return ResponseEntity.ok(profileService.getProfile(authentication));
     }
 
-    @PostMapping
+    @PutMapping
     public ResponseEntity<ProfileResponseDto> updateMyProfile(Authentication authentication,
             @Valid @RequestBody ProfileUpdateRequestDto request)
     {
          return ResponseEntity.ok(profileService.updateProfile(authentication, request));
+    }
+
+    @PutMapping("/avatar")
+    public ResponseEntity<ProfileResponseDto> updateAvatar(
+            Authentication authentication,
+            @Valid @RequestBody AvatarUpdateRequestDto request) {
+
+        return ResponseEntity.ok(
+                profileService.updateAvatar(authentication, request)
+        );
     }
 }

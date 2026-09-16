@@ -41,6 +41,7 @@ public class WebConfig {
                       .requestMatchers(HttpMethod.POST, "/login").permitAll()
                       .anyRequest().authenticated())
               .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+              .logout(logout -> logout.disable())
               .addFilterBefore(
                       jwtAuthFilter,
                       UsernamePasswordAuthenticationFilter.class
