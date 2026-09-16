@@ -1,10 +1,12 @@
 package com.SkillBridge.skillbridge.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class signUpRequestDto {
+@Builder
+public class LoginResponseDto {
     private String userName;
     private String email;
-    private String password;
+    private String token;
 }

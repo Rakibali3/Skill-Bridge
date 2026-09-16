@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import {
     Play,
     ArrowRight,
@@ -43,11 +43,12 @@ export default function HeroSection() {
                     {/* Buttons */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
 
-                        <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 font-medium text-white shadow-md shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-lg sm:w-auto cursor-pointer">
-                            <span>Get Started</span>
-                            <ArrowRight className="h-4 w-4" />
-                        </button>
-
+                        <Link to="/signup">
+                            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 font-medium text-white shadow-md shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-lg sm:w-auto cursor-pointer">
+                                <span>Get Started</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        </Link>
                         <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 sm:w-auto cursor-pointer">
                             <Play className="h-4 w-4 fill-indigo-600 text-indigo-600" />
                             <span>Watch Video</span>
