@@ -14,12 +14,13 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import { useProfileData } from "../../assets/hooks/useProfileData";
 
 export default function DashBoard() {
-  const user = {
-    name: "Ali Khan",
-  };
 
+  const { data: profileData, isLoading } = useProfileData();
+   const userName = profileData?.userName || profileData?.name || "";
+   const firstName = userName ? (userName.trim().split(" ")[0]).toUpperCase() : "";
   const stats = [
     {
       title: "Active Exchanges",
@@ -107,7 +108,7 @@ export default function DashBoard() {
       {/* Welcome */}
       <section className="mb-7">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Welcome back, {user.name.split(" ")[0]}! 👋
+          Welcome back, {firstName}! 👋
         </h2>
 
         <p className="mt-1 text-sm text-slate-500 sm:text-base">

@@ -9,43 +9,98 @@ import {
   LogOut,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 import api from "../../API/axios";
+import { useProfileData } from "../../assets/hooks/useProfileData";
 
 export default function TopBar({ onMenuClick }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const user = {
-    name: "Ali Khan",
-    role: "Skill Explorer",
-    avatar: "https://i.pravatar.cc/150?img=12",
-  };
+  const {
+    data: profileData,
+    isLoading,
+  } = useProfileData();
+
+  const userName =
+    profileData?.userName ||
+    profileData?.name ||
+    "";
+
+  const firstName = userName
+    ? userName.trim().split(" ")[0].toUpperCase()
+    : "";
+
+  const avatarUrl =
+    profileData?.avatarUrl ||
+    profileData?.profileUrl;
+
+
+  // -------------------------------------------------------
+  // Logout
+  // -------------------------------------------------------
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
     try {
+      // Delete JWT cookie from backend
       await api.post("/logout");
-      navigate("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout request failed:", error);
+    } finally {
+      /*
+       * IMPORTANT:
+       *
+       * Remove all React Query cached data belonging
+       * to the previous user.
+       *
+       * This prevents User A's profile/skills/dashboard
+       * data from appearing for User B.
+       */
+      queryClient.clear();
+
+      // Close dropdown
+      setProfileOpen(false);
+
+      // Go to login page
+      navigate("/login", {
+        replace: true,
+      });
+
+      setIsLoggingOut(false);
     }
   };
 
+
   return (
     <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
-      {/* Left */}
+
+      {/* =================================================
+          LEFT
+      ================================================= */}
+
       <div className="flex items-center gap-3">
+
         {/* Mobile Menu */}
         <button
+          type="button"
           onClick={onMenuClick}
-          className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+          className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-100 lg:hidden"
         >
           <Menu size={23} />
         </button>
 
+
         {/* Search */}
         <div className="relative hidden sm:block">
+
           <Search
             size={18}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -75,86 +130,159 @@ export default function TopBar({ onMenuClick }) {
               lg:w-[430px]
             "
           />
+
         </div>
+
       </div>
 
-      {/* Right */}
+
+      {/* =================================================
+          RIGHT
+      ================================================= */}
+
       <div className="flex items-center gap-2 sm:gap-4">
+
         {/* Mobile Search */}
-        <button className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 sm:hidden">
+        <button
+          type="button"
+          className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 sm:hidden"
+        >
           <Search size={21} />
         </button>
 
+
         {/* Notifications */}
         <button
+          type="button"
           onClick={() => navigate("/notifications")}
-          className="relative rounded-xl p-2.5 text-slate-500 hover:bg-slate-100"
+          className="relative rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100"
         >
           <Bell size={21} />
 
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
         </button>
 
+
+        {/* Divider */}
         <div className="h-8 w-px bg-slate-200" />
 
-        {/* Profile */}
+
+        {/* =================================================
+            PROFILE
+        ================================================= */}
+
         <div className="relative">
+
+          {/* Profile Button */}
           <button
-            onClick={() => setProfileOpen((prev) => !prev)}
-            className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-50 sm:gap-3"
+            type="button"
+            onClick={() =>
+              setProfileOpen((previous) => !previous)
+            }
+            className="flex cursor-pointer items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-50 sm:gap-3"
           >
+
+            {/* Avatar */}
             <img
-              src={user.avatar}
-              alt={user.name}
-              className="h-9 w-9 rounded-full object-cover ring-2 ring-white shadow-sm"
+              src={
+                avatarUrl ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  firstName || "User"
+                )}&background=6366f1&color=fff`
+              }
+              alt={firstName || "User Avatar"}
+              className="h-9 w-9 rounded-full object-cover shadow-sm ring-2 ring-white"
             />
 
+
+            {/* Name */}
             <div className="hidden text-left sm:block">
+
               <p className="text-sm font-semibold text-slate-800">
-                {user.name}
+                {isLoading
+                  ? "Loading..."
+                  : firstName || "Your Name"}
               </p>
 
               <p className="text-[11px] text-slate-400">
-                {user.role}
+                Skill Explorer
               </p>
+
             </div>
 
+
+            {/* Chevron */}
             <ChevronDown
               size={16}
-              className="hidden text-slate-400 sm:block"
+              className={`hidden text-slate-400 transition-transform sm:block ${
+                profileOpen ? "rotate-180" : ""
+              }`}
             />
+
           </button>
 
-          {/* Dropdown */}
+
+          {/* =================================================
+              DROPDOWN
+          ================================================= */}
+
           {profileOpen && (
             <div className="absolute right-0 top-14 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+
+              {/* My Profile */}
               <NavLink
                 to="/profile"
                 onClick={() => setProfileOpen(false)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50"
               >
                 <User size={17} />
                 My Profile
               </NavLink>
 
-              <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
+
+              {/* Settings */}
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate("/settings");
+                }}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50"
+              >
                 <Settings size={17} />
                 Settings
               </button>
 
+
+              {/* Divider */}
               <div className="my-1 border-t border-slate-100" />
 
+
+              {/* Logout */}
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+                disabled={isLoggingOut}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <LogOut size={17} />
-                Logout
+
+                {isLoggingOut ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
+                ) : (
+                  <LogOut size={17} />
+                )}
+
+                {isLoggingOut ? "Logging out..." : "Logout"}
+
               </button>
+
             </div>
           )}
+
         </div>
+
       </div>
+
     </header>
   );
 }

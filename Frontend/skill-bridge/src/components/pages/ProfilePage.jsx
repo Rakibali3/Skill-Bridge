@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Camera,
   Edit3,
@@ -14,60 +14,51 @@ import {
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import api from "../../API/axios";
 import { uploadImage } from "../../services/cloudinaryService";
+import { useProfileData,  useUpdateProfile,} from "../../assets/hooks/useProfileData";
 
-const INITIAL_PROFILE = {
-  id: null,
-  userName: "",
-  email: "",
+import { useSkillsData } from "../../assets/hooks/useSkillsData";
+
+const INITIAL_FORM = {
   bio: "",
   location: "",
   experience: "",
   learningStyle: "",
   preferredFormat: "",
   availability: "",
-  avatarUrl: "",
 };
 
 export default function ProfilePage() {
-  const [profileData, setProfileData] = useState(INITIAL_PROFILE);
-  const [formData, setFormData] = useState(INITIAL_PROFILE);
+
+  const { data: profileData, isLoading, error: fetchError } = useProfileData();
+  const updateProfileMutation = useUpdateProfile();
+
+   const { data: skillsData = []  } = useSkillsData();
+    const teachingSkills = skillsData.filter(
+    (skill) => skill.skillType === "TEACH"
+  );
+
+  const learningSkills = skillsData.filter(
+    (skill) => skill.skillType === "LEARN"
+  );
+
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const { data } = await api.get("/profile");
-      setProfileData(data);
-    } catch (err) {
-      console.error("Failed to fetch profile:", err);
-      setError(err.response?.data?.message || "Unable to load your profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProfile();
-  }, []);
-
   const handleEditProfile = () => {
     setFormData({
-      bio: profileData.bio || "",
-      location: profileData.location || "",
-      experience: profileData.experience || "",
-      learningStyle: profileData.learningStyle || "",
-      preferredFormat: profileData.preferredFormat || "",
-      availability: profileData.availability || "",
+      bio: profileData?.bio || "",
+      location: profileData?.location || "",
+      experience: profileData?.experience || "",
+      learningStyle: profileData?.learningStyle || "",
+      preferredFormat: profileData?.preferredFormat || "",
+      availability: profileData?.availability || "",
     });
-    setImagePreview(profileData.avatarUrl || "");
+    setImagePreview(profileData?.avatarUrl || profileData?.profileUrl || "");
     setSelectedImage(null);
     setError("");
     setSuccess("");
@@ -105,13 +96,17 @@ export default function ProfilePage() {
       setError("");
       setSuccess("");
 
+      let updatedAvatarUrl = profileData?.avatarUrl || profileData?.profileUrl;
+
       if (selectedImage) {
-        const imageUrl = await uploadImage(selectedImage);
-        await api.put("/profile/avatar", { avatarUrl: imageUrl });
+        updatedAvatarUrl = await uploadImage(selectedImage);
+        await api.put("/profile/avatar", { avatarUrl: updatedAvatarUrl });
       }
 
-      await api.put("/profile", formData);
-      await fetchProfile();
+      await updateProfileMutation.mutateAsync({
+        ...formData,
+        avatarUrl: updatedAvatarUrl,
+      });
 
       resetFormState();
       setSuccess("Profile updated successfully.");
@@ -132,7 +127,7 @@ export default function ProfilePage() {
     setError("");
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[400px] items-center justify-center">
@@ -141,6 +136,8 @@ export default function ProfilePage() {
       </DashboardLayout>
     );
   }
+
+  const user = profileData || {};
 
   return (
     <DashboardLayout>
@@ -161,7 +158,7 @@ export default function ProfilePage() {
           {!isEditing && (
             <button
               onClick={handleEditProfile}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700 cursor-pointer"
             >
               <Edit3 size={17} />
               Edit Profile
@@ -176,9 +173,9 @@ export default function ProfilePage() {
           {success}
         </div>
       )}
-      {error && (
+      {(error || fetchError) && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-          {error}
+          {error || "Unable to load your profile."}
         </div>
       )}
 
@@ -191,10 +188,13 @@ export default function ProfilePage() {
               <img
                 src={
                   imagePreview ||
-                  profileData.avatarUrl ||
-                  "https://ui-avatars.com/api/?name=User&background=6366f1&color=fff"
+                  user.avatarUrl ||
+                  user.profileUrl ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.userName || "User"
+                  )}&background=6366f1&color=fff`
                 }
-                alt={profileData.userName || "Profile"}
+                alt={user.userName || "Profile"}
                 className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lg sm:h-36 sm:w-36"
               />
               {isEditing && (
@@ -213,13 +213,13 @@ export default function ProfilePage() {
             <div className="flex-1 sm:pb-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-2xl font-bold text-slate-900">
-                  {profileData.userName || "Your Name"}
+                  {user.userName || "Your Name"}
                 </h2>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
                   <CheckCircle2 size={13} /> Active
                 </span>
               </div>
-              <p className="mt-1 text-sm text-slate-400">{profileData.email}</p>
+              <p className="mt-1 text-sm text-slate-400">{user.email}</p>
             </div>
 
             <div className="rounded-xl bg-indigo-50 px-4 py-2.5 text-center sm:mb-1">
@@ -233,17 +233,17 @@ export default function ProfilePage() {
           </div>
 
           <p className="mt-6 max-w-3xl text-sm leading-6 text-slate-600">
-            {profileData.bio || "Add a short introduction about yourself."}
+            {user.bio || "Add a short introduction about yourself."}
           </p>
 
           <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-500">
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-slate-400" />
-              {profileData.email || "No email"}
+              {user.email || "No email"}
             </div>
             <div className="flex items-center gap-2">
               <MapPin size={16} className="text-slate-400" />
-              {profileData.location || "Location not added"}
+              {user.location || "Location not added"}
             </div>
           </div>
         </div>
@@ -270,7 +270,9 @@ export default function ProfilePage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">Bio</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Bio
+              </label>
               <textarea
                 name="bio"
                 value={formData.bio}
@@ -283,7 +285,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Location</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Location
+              </label>
               <input
                 type="text"
                 name="location"
@@ -296,7 +300,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Experience</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Experience
+              </label>
               <input
                 type="text"
                 name="experience"
@@ -309,7 +315,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Learning Style</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Learning Style
+              </label>
               <select
                 name="learningStyle"
                 value={formData.learningStyle}
@@ -326,7 +334,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Preferred Format</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Preferred Format
+              </label>
               <select
                 name="preferredFormat"
                 value={formData.preferredFormat}
@@ -341,7 +351,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Availability</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Availability
+              </label>
               <select
                 name="availability"
                 value={formData.availability}
@@ -368,7 +380,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSaveProfile}
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               <Save size={17} />
               {saving ? "Saving..." : "Save Changes"}
@@ -393,10 +405,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <InfoItem label="Experience" value={profileData.experience || "Not added"} />
-            <InfoItem label="Learning Style" value={profileData.learningStyle || "Not added"} />
-            <InfoItem label="Preferred Format" value={profileData.preferredFormat || "Not added"} />
-            <InfoItem label="Availability" value={profileData.availability || "Not added"} />
+            <InfoItem label="Experience" value={user.experience || "Not added"} />
+            <InfoItem label="Learning Style" value={user.learningStyle || "Not added"} />
+            <InfoItem label="Preferred Format" value={user.preferredFormat || "Not added"} />
+            <InfoItem label="Availability" value={user.availability || "Not added"} />
           </div>
         </div>
 
@@ -412,8 +424,8 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            <StatRow label="Skills Teaching" value="0" />
-            <StatRow label="Skills Learning" value="0" />
+            <StatRow label="Skills Teaching" value={teachingSkills.length} />
+            <StatRow label="Skills Learning" value={learningSkills.length}/>
             <StatRow label="Exchanges Completed" value="0" />
             <StatRow label="People Helped" value="0" />
           </div>

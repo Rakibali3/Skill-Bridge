@@ -30,12 +30,9 @@ public class ProfileController {
     }
 
     @PutMapping("/avatar")
-    public ResponseEntity<ProfileResponseDto> updateAvatar(
-            Authentication authentication,
+    public ResponseEntity<ProfileResponseDto> updateAvatar(Authentication authentication,
             @Valid @RequestBody AvatarUpdateRequestDto request) {
 
-        return ResponseEntity.ok(
-                profileService.updateAvatar(authentication, request)
-        );
+        return ResponseEntity.ok(profileService.updateAvatar(authentication, request));
     }
 }
