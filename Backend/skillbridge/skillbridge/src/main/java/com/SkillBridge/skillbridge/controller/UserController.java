@@ -47,13 +47,9 @@ public class UserController {
 
         SignupResponseDto response =
                 new SignupResponseDto(
-
                         "Account created successfully",
-
                         newUser.getId(),
-
                         newUser.getUserName(),
-
                         newUser.getEmail()
                 );
 
@@ -63,7 +59,7 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
         LoginResponseDto existingUser = userService.login(request);
-        String token = jwtService.generateToken(existingUser.getEmail(), request.isRememberMe());
+        String token = jwtService.generateToken(existingUser.getEmail(),existingUser.getRole().name(), request.isRememberMe());
         long expiry = jwtService.getExpiry(request.isRememberMe());
         response.addHeader(HttpHeaders.SET_COOKIE,
                 cookieService.createAccessTokenCookie(token, expiry).toString());

@@ -2,7 +2,6 @@ package com.SkillBridge.skillbridge.controller;
 
 import com.SkillBridge.skillbridge.dto.SkillRequestDto;
 import com.SkillBridge.skillbridge.dto.SkillResponseDto;
-import com.SkillBridge.skillbridge.entity.Skill;
 import com.SkillBridge.skillbridge.service.SkillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +29,12 @@ public class SkillController {
     @GetMapping
     public ResponseEntity<List<SkillResponseDto>> getSkills(Authentication authentication){
         return ResponseEntity.ok(skillService.getSkills(authentication));
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<SkillResponseDto>> getAvailableSkills() {
+
+        return ResponseEntity.ok(skillService.getAvailableSkills());
     }
 
     @GetMapping("/teaching")

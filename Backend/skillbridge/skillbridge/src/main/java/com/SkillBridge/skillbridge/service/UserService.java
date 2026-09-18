@@ -7,6 +7,7 @@ import com.SkillBridge.skillbridge.dto.LoginRequestDto;
 import com.SkillBridge.skillbridge.dto.LoginResponseDto;
 import com.SkillBridge.skillbridge.dto.SignupRequestDto;
 import com.SkillBridge.skillbridge.entity.User;
+import com.SkillBridge.skillbridge.enums.Roles;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -44,17 +45,10 @@ public class UserService {
         }
 
         User user = User.builder()
-
                 .userName(userName)
-
                 .email(email)
-
-                .password(
-                        passwordEncoder.encode(
-                                request.getPassword()
-                        )
-                )
-
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Roles.USER)
                 .build();
 
 
@@ -66,7 +60,7 @@ public class UserService {
                         .trim()
                         .toLowerCase(Locale.ROOT);
         User user = userRepository.findByEmailIgnoreCase(email).
-                orElseThrow(() -> new InvalidCredentialsException( "Invalid email or password"));
+                orElseThrow(() -> new InvalidCredentialsException( "Email does not exist please signup!"));
         boolean passwordMatcher = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if(!passwordMatcher){
             throw new InvalidCredentialsException(
@@ -76,6 +70,7 @@ public class UserService {
         return LoginResponseDto.builder()
                 .email(user.getEmail())
                 .userName(user.getUserName())
+                .role(user.getRole())
                 .build();
     }
 

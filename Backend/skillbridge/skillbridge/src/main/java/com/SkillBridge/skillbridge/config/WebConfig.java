@@ -6,6 +6,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -39,13 +40,24 @@ public class WebConfig {
               .authorizeHttpRequests(requests -> requests
                       .requestMatchers(HttpMethod.POST, "/signup").permitAll()
                       .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                      .requestMatchers("/admin/**").hasRole("ADMIN")
                       .anyRequest().authenticated())
               .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
               .logout(logout -> logout.disable())
-              .addFilterBefore(
-                      jwtAuthFilter,
-                      UsernamePasswordAuthenticationFilter.class
+              .exceptionHandling(exception -> exception
+                              // Not authenticated
+                              .authenticationEntryPoint(
+                                      (request, response, authException) ->
+                                              response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authentication required")
+                              )
+
+                              // Authenticated but not authorized
+                              .accessDeniedHandler(
+                                      (request, response, accessDeniedException) ->
+                                              response.sendError(HttpStatus.FORBIDDEN.value(), "Access denied")
+                              )
               )
+              .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
               .build();
     }
 

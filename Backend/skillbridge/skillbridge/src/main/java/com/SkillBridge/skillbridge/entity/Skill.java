@@ -20,4 +20,8 @@ public class Skill {
 
     @Column(length = 100)
     private String category;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
 }

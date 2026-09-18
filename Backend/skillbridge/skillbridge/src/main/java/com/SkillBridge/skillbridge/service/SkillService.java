@@ -1,6 +1,9 @@
 package com.SkillBridge.skillbridge.service;
 
 import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
+import com.SkillBridge.skillbridge.ExceptionHandling.DuplicateUserSkillException;
+import com.SkillBridge.skillbridge.ExceptionHandling.SkillNotFoundException;
+import com.SkillBridge.skillbridge.ExceptionHandling.SkillUnavailableException;
 import com.SkillBridge.skillbridge.dto.SkillRequestDto;
 import com.SkillBridge.skillbridge.dto.SkillResponseDto;
 import com.SkillBridge.skillbridge.entity.Skill;
@@ -29,10 +32,12 @@ public class SkillService {
 
     public SkillResponseDto addSkill(Authentication authentication, @Valid SkillRequestDto skillRequestDto) {
        User user = getAuthenticatedUser(authentication);
-        String skillName = skillRequestDto.getSkillName().trim();
+        Skill skill = skillRepository.findById(skillRequestDto.getSkillId())
+                .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
-        Skill skill = skillRepository.findByNameIgnoreCase(skillName)
-                .orElseGet(() -> skillRepository.save(Skill.builder().name(skillName).build()));
+        if (!skill.isActive()) {
+            throw new SkillUnavailableException("This skill is currently unavailable");
+        }
 
         boolean isSkillExist = userSkillRepository.existsByUserIdAndSkillIdAndSkillType(
                 user.getId(),
@@ -40,7 +45,7 @@ public class SkillService {
                 skillRequestDto.getSkillType()
         );
         if(isSkillExist){
-            throw new RuntimeException("You have already added this skill");
+            throw new DuplicateUserSkillException("You have already added this skill");
         }
 
         UserSkill userSkill = UserSkill.builder()
@@ -48,9 +53,18 @@ public class SkillService {
                 .skill(skill)
                 .skillType(skillRequestDto.getSkillType())
                 .level(skillRequestDto.getLevel())
-                .experience(skillRequestDto.getExperience())
-                .description(skillRequestDto.getDescription())
-                .learningGoal(skillRequestDto.getLearningGoal())
+                .experience(skillRequestDto.getSkillType() == SkillType.TEACH
+                                ? skillRequestDto.getExperience()
+                                : null
+                )
+                .description(skillRequestDto.getSkillType() == SkillType.TEACH
+                                ? skillRequestDto.getDescription()
+                                : null
+                )
+                .learningGoal(skillRequestDto.getSkillType() == SkillType.LEARN
+                                ? skillRequestDto.getLearningGoal()
+                                : null
+                )
                 .build();
 
         UserSkill saved = userSkillRepository.save(userSkill);
@@ -90,20 +104,29 @@ public class SkillService {
 
         User user = getAuthenticatedUser(authentication);
         UserSkill userSkill = userSkillRepository.findByIdAndUserId(id,user.getId()).orElseThrow(()
-                -> new RuntimeException("Skill not found"));
+                -> new SkillNotFoundException("Skill not found"));
 
-        String skillName = skillRequestDto.getSkillName().trim();
+        Skill skill = skillRepository.findById(skillRequestDto.getSkillId())
+                .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
-        Skill skill = skillRepository.findByNameIgnoreCase(skillName).orElseGet(()
-                -> skillRepository.save(Skill.builder().name(skillName).build()));
+        if (!skill.isActive()) {
+            throw new SkillUnavailableException(
+                    "This skill is currently unavailable"
+            );
+        }
 
         userSkill.setSkill(skill);
         userSkill.setSkillType(skillRequestDto.getSkillType());
         userSkill.setLevel(skillRequestDto.getLevel());
-        userSkill.setExperience(skillRequestDto.getExperience());
-        userSkill.setDescription(skillRequestDto.getDescription());
-        userSkill.setLearningGoal(skillRequestDto.getLearningGoal());
-
+        if (skillRequestDto.getSkillType() == SkillType.TEACH) {
+            userSkill.setExperience(skillRequestDto.getExperience());
+            userSkill.setDescription(skillRequestDto.getDescription());
+            userSkill.setLearningGoal(null);
+        } else {
+            userSkill.setExperience(null);
+            userSkill.setDescription(null);
+            userSkill.setLearningGoal(skillRequestDto.getLearningGoal());
+        }
         UserSkill updated = userSkillRepository.save(userSkill);
 
         return convertToResponse(updated);
@@ -113,12 +136,20 @@ public class SkillService {
         User user = getAuthenticatedUser(authentication);
 
         UserSkill userSkill =  userSkillRepository.findByIdAndUserId(id,user.getId()).orElseThrow(()->
-                new RuntimeException("Skill not found"));
+                new SkillNotFoundException("Skill not found"));
 
         userSkillRepository.delete(userSkill);
 
     }
 
+    @Transactional(readOnly = true)
+    public List<SkillResponseDto> getAvailableSkills() {
+
+        return skillRepository.findByActiveTrueOrderByNameAsc()
+                .stream()
+                .map(this::convertMasterSkillToResponse)
+                .toList();
+    }
     private User getAuthenticatedUser(Authentication authentication) {
         String Email = authentication.getName();
         return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
@@ -135,6 +166,14 @@ public class SkillService {
                 .experience(userSkill.getExperience())
                 .description(userSkill.getDescription())
                 .learningGoal(userSkill.getLearningGoal())
+                .build();
+    }
+    private SkillResponseDto convertMasterSkillToResponse(Skill skill) {
+
+        return SkillResponseDto.builder()
+                .skillId(skill.getId())
+                .skillName(skill.getName())
+                .category(skill.getCategory())
                 .build();
     }
 

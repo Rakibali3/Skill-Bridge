@@ -1,5 +1,6 @@
 package com.SkillBridge.skillbridge.entity;
 
+import com.SkillBridge.skillbridge.enums.Roles;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -42,4 +43,9 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Roles role = Roles.USER;
 }

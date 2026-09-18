@@ -9,12 +9,8 @@ import lombok.Data;
 
 @Data
 public class SkillRequestDto {
-    @NotBlank(message = "Skill name is required")
-    @Size(
-            max = 100,
-            message = "Skill name cannot exceed 100 characters"
-    )
-    private String skillName;
+    @NotNull(message = "Skill is required")
+    private Long skillId;
 
     @NotNull(message = "Skill type is required")
     private SkillType skillType;
@@ -22,21 +18,12 @@ public class SkillRequestDto {
     @NotNull(message = "Skill level is required")
     private SkillLevel level;
 
-    @Size(
-            max = 50,
-            message = "Experience cannot exceed 50 characters"
-    )
+    @Size(max = 50, message = "Experience cannot exceed 50 characters")
     private String experience;
 
-    @Size(
-            max = 500,
-            message = "Description cannot exceed 500 characters"
-    )
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    @Size(
-            max = 500,
-            message = "Learning goal cannot exceed 500 characters"
-    )
+    @Size(max = 500, message = "Learning goal cannot exceed 500 characters")
     private String learningGoal;
 }

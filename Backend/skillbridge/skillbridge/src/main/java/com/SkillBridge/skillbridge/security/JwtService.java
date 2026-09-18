@@ -17,16 +17,15 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    public String generateToken(String email, boolean rememberMe) {
-
+    public String generateToken(String email, String role, boolean rememberMe) {
         long expiry = getExpiry(rememberMe);
-
         Date now = new Date();
 
         Date expiration = new Date(now.getTime() + expiry);
 
         return Jwts.builder()
                 .subject(email)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(getSecretKey())
@@ -42,6 +41,11 @@ public class JwtService {
 
     public String extractEmailFromToken(String token) {
         return parseToken(token).getSubject();
+    }
+
+    public String extractRoleFromToken(String token) {
+
+        return parseToken(token).get("role", String.class);
     }
 
     public boolean isValidToken(String token) {

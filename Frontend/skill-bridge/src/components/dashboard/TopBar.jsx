@@ -21,10 +21,7 @@ export default function TopBar({ onMenuClick }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const {
-    data: profileData,
-    isLoading,
-  } = useProfileData();
+  const { data: profileData, isLoading } = useProfileData();
 
   const userName =
     profileData?.userName ||
@@ -35,14 +32,7 @@ export default function TopBar({ onMenuClick }) {
     ? userName.trim().split(" ")[0].toUpperCase()
     : "";
 
-  const avatarUrl =
-    profileData?.avatarUrl ||
-    profileData?.profileUrl;
-
-
-  // -------------------------------------------------------
-  // Logout
-  // -------------------------------------------------------
+  const avatarUrl = profileData?.avatarUrl || profileData?.profileUrl;
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -50,20 +40,10 @@ export default function TopBar({ onMenuClick }) {
     setIsLoggingOut(true);
 
     try {
-      // Delete JWT cookie from backend
       await api.post("/logout");
     } catch (error) {
       console.error("Logout request failed:", error);
     } finally {
-      /*
-       * IMPORTANT:
-       *
-       * Remove all React Query cached data belonging
-       * to the previous user.
-       *
-       * This prevents User A's profile/skills/dashboard
-       * data from appearing for User B.
-       */
       queryClient.clear();
 
       // Close dropdown
@@ -81,10 +61,6 @@ export default function TopBar({ onMenuClick }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
-
-      {/* =================================================
-          LEFT
-      ================================================= */}
 
       <div className="flex items-center gap-3">
 
@@ -135,11 +111,6 @@ export default function TopBar({ onMenuClick }) {
 
       </div>
 
-
-      {/* =================================================
-          RIGHT
-      ================================================= */}
-
       <div className="flex items-center gap-2 sm:gap-4">
 
         {/* Mobile Search */}
@@ -167,10 +138,6 @@ export default function TopBar({ onMenuClick }) {
         <div className="h-8 w-px bg-slate-200" />
 
 
-        {/* =================================================
-            PROFILE
-        ================================================= */}
-
         <div className="relative">
 
           {/* Profile Button */}
@@ -187,7 +154,7 @@ export default function TopBar({ onMenuClick }) {
               src={
                 avatarUrl ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  firstName || "User"
+                  userName || "User"
                 )}&background=6366f1&color=fff`
               }
               alt={firstName || "User Avatar"}

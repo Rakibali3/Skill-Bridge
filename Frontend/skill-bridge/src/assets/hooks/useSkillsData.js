@@ -6,6 +6,11 @@ import {
 
 import api from "../../API/axios";
 
+
+// =========================================================
+// GET ALL USER SKILLS
+// =========================================================
+
 export function useSkillsData() {
   return useQuery({
     queryKey: ["skills"],
@@ -19,6 +24,27 @@ export function useSkillsData() {
 }
 
 
+// =========================================================
+// GET AVAILABLE MASTER SKILLS
+// =========================================================
+
+export function useAvailableSkills() {
+  return useQuery({
+    queryKey: ["skills", "available"],
+
+    queryFn: async () => {
+      const { data } = await api.get("/skills/available");
+
+      return data;
+    },
+  });
+}
+
+
+// =========================================================
+// GET TEACHING SKILLS
+// =========================================================
+
 export function useTeachingSkills() {
   return useQuery({
     queryKey: ["skills", "teaching"],
@@ -30,6 +56,11 @@ export function useTeachingSkills() {
     },
   });
 }
+
+
+// =========================================================
+// GET LEARNING SKILLS
+// =========================================================
 
 export function useLearningSkills() {
   return useQuery({
@@ -43,12 +74,20 @@ export function useLearningSkills() {
   });
 }
 
+
+// =========================================================
+// ADD SKILL
+// =========================================================
+
 export function useAddSkill() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (skillData) => {
-      const { data } = await api.post("/skills", skillData);
+      const { data } = await api.post(
+        "/skills",
+        skillData
+      );
 
       return data;
     },
@@ -60,6 +99,11 @@ export function useAddSkill() {
     },
   });
 }
+
+
+// =========================================================
+// UPDATE SKILL
+// =========================================================
 
 export function useUpdateSkill() {
   const queryClient = useQueryClient();
@@ -82,12 +126,19 @@ export function useUpdateSkill() {
   });
 }
 
+
+// =========================================================
+// DELETE SKILL
+// =========================================================
+
 export function useDeleteSkill() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id) => {
-      const { data } = await api.delete(`/skills/${id}`);
+      const { data } = await api.delete(
+        `/skills/${id}`
+      );
 
       return data;
     },

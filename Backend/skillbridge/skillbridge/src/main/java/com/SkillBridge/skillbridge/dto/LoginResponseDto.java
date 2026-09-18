@@ -1,5 +1,6 @@
 package com.SkillBridge.skillbridge.dto;
 
+import com.SkillBridge.skillbridge.enums.Roles;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,4 +9,5 @@ import lombok.Data;
 public class LoginResponseDto {
     private String userName;
     private String email;
+    private Roles role;
 }
