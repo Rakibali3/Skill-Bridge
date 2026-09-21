@@ -22,10 +22,14 @@ export default function FindMatchesPage() {
 
   const { data: matchingData = [] } = useMatchingData();
 
-  const handleProfile = async (id) => {
-     navigate(`/profile/${id}`);
-  };
-
+  const handleProfile = (match) => {
+  navigate(`/profile/${match.id}`, {
+    state: {
+      canTeach: match.canTeach,
+      wantsToLearn: match.wantsToLearn,
+    },
+  });
+};
   // Map incoming data into normalized match objects
   const matches = useMemo(() => {
     return matchingData.map((match) => {
@@ -258,7 +262,7 @@ function MatchCard({ match, requestSent, onSendRequest,onViewProfile }) {
           <button
             type="button"
             className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-100"
-            onClick = {() => onViewProfile(match.id)}
+            onClick = {() => onViewProfile(match)}
           >
             View Profile
           </button>

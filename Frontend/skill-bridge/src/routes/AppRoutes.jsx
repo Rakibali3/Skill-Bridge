@@ -7,6 +7,7 @@ import ProfilePage from "../components/pages/ProfilePage";
 import MySkillsPage from "../components/pages/MySkillsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import FindMatchesPage from "../components/pages/FindMatchesPage";
+import UserProfilePage from "../components/pages/UserProfilePage";
 
 
 function AppRoutes() {
@@ -21,6 +22,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/profile" element={<ProfilePage />} />
+         <Route path="/profile/:userId" element={<UserProfilePage />} />
         <Route path="/my-skills" element={<MySkillsPage />} />
         <Route path="/matches" element={<FindMatchesPage />} />
       </Route>
