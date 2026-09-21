@@ -35,4 +35,10 @@ public class ProfileController {
 
         return ResponseEntity.ok(profileService.updateAvatar(authentication, request));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfileResponseDto> getUserById(Authentication authentication, @PathVariable Long id){
+        ProfileResponseDto profileResponseDto = profileService.getUserById(authentication,id);
+        return ResponseEntity.ok(profileResponseDto);
+    }
 }

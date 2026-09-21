@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 @Table(name = "skills", uniqueConstraints = {@UniqueConstraint(name = "uk_skill_name", columnNames = "name")})
 public class Skill {
     @Id

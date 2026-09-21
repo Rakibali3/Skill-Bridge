@@ -6,6 +6,7 @@ import DashBoard from "../components/pages/DashBoard";
 import ProfilePage from "../components/pages/ProfilePage";
 import MySkillsPage from "../components/pages/MySkillsPage";
 import ProtectedRoute from "./ProtectedRoute";
+import FindMatchesPage from "../components/pages/FindMatchesPage";
 
 
 function AppRoutes() {
@@ -21,6 +22,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/my-skills" element={<MySkillsPage />} />
+        <Route path="/matches" element={<FindMatchesPage />} />
       </Route>
 
     </Routes>

@@ -31,10 +31,10 @@ public class UserProfile {
     @Column(length = 50)
     private String learningStyle;
 
-    @Column(length = 100)
+    @Column(length = 20)
     private String preferredFormat;
 
-    @Column(length = 100)
+    @Column(length = 20)
     private String availability;
 
     @Column(length = 500)

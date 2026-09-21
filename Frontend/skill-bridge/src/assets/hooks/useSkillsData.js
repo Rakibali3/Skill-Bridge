@@ -96,6 +96,9 @@ export function useAddSkill() {
       queryClient.invalidateQueries({
         queryKey: ["skills"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["matches"],
+      });
     },
   });
 }
@@ -122,6 +125,9 @@ export function useUpdateSkill() {
       queryClient.invalidateQueries({
         queryKey: ["skills"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["matches"],
+      });
     },
   });
 }
@@ -146,6 +152,9 @@ export function useDeleteSkill() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["skills"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["matches"],
       });
     },
   });

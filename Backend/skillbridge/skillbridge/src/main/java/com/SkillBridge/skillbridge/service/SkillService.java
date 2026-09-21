@@ -25,13 +25,15 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class SkillService {
+
     private final SkillRepository skillRepository;
     private final UserRepository userRepository;
     private final UserSkillRepository userSkillRepository;
-
+    private final MatchingService matchingService;
 
     public SkillResponseDto addSkill(Authentication authentication, @Valid SkillRequestDto skillRequestDto) {
-       User user = getAuthenticatedUser(authentication);
+        User user = getAuthenticatedUser(authentication);
+
         Skill skill = skillRepository.findById(skillRequestDto.getSkillId())
                 .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
@@ -44,7 +46,8 @@ public class SkillService {
                 skill.getId(),
                 skillRequestDto.getSkillType()
         );
-        if(isSkillExist){
+
+        if (isSkillExist) {
             throw new DuplicateUserSkillException("You have already added this skill");
         }
 
@@ -53,38 +56,30 @@ public class SkillService {
                 .skill(skill)
                 .skillType(skillRequestDto.getSkillType())
                 .level(skillRequestDto.getLevel())
-                .experience(skillRequestDto.getSkillType() == SkillType.TEACH
-                                ? skillRequestDto.getExperience()
-                                : null
-                )
-                .description(skillRequestDto.getSkillType() == SkillType.TEACH
-                                ? skillRequestDto.getDescription()
-                                : null
-                )
-                .learningGoal(skillRequestDto.getSkillType() == SkillType.LEARN
-                                ? skillRequestDto.getLearningGoal()
-                                : null
-                )
+                .experience(skillRequestDto.getSkillType() == SkillType.TEACH ? skillRequestDto.getExperience() : null)
+                .description(skillRequestDto.getSkillType() == SkillType.TEACH ? skillRequestDto.getDescription() : null)
+                .learningGoal(skillRequestDto.getSkillType() == SkillType.LEARN ? skillRequestDto.getLearningGoal() : null)
                 .build();
 
         UserSkill saved = userSkillRepository.save(userSkill);
 
-        return convertToResponse(saved);
+        matchingService.refreshMatchesForUser(user.getId());
 
+        return convertToResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public List<SkillResponseDto> getSkills(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-        return userSkillRepository.findByUserId(user.getId()).stream().map(this::convertToResponse).toList();
+        return userSkillRepository.findByUserId(user.getId()).stream()
+                .map(this::convertToResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<SkillResponseDto> getTeachingSkills(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-
-        return userSkillRepository.findByUserIdAndSkillType(user.getId(),SkillType.TEACH)
-                .stream()
+        return userSkillRepository.findByUserIdAndSkillType(user.getId(), SkillType.TEACH).stream()
                 .map(this::convertToResponse)
                 .toList();
     }
@@ -92,32 +87,28 @@ public class SkillService {
     @Transactional(readOnly = true)
     public List<SkillResponseDto> getLearningSkills(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-
-        return userSkillRepository.findByUserIdAndSkillType(user.getId(),SkillType.LEARN)
-                .stream()
+        return userSkillRepository.findByUserIdAndSkillType(user.getId(), SkillType.LEARN).stream()
                 .map(this::convertToResponse)
                 .toList();
     }
 
-    public SkillResponseDto updateSkill(Authentication authentication,
-                                        @Valid SkillRequestDto skillRequestDto, Long id) {
-
+    public SkillResponseDto updateSkill(Authentication authentication, @Valid SkillRequestDto skillRequestDto, Long id) {
         User user = getAuthenticatedUser(authentication);
-        UserSkill userSkill = userSkillRepository.findByIdAndUserId(id,user.getId()).orElseThrow(()
-                -> new SkillNotFoundException("Skill not found"));
+
+        UserSkill userSkill = userSkillRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
         Skill skill = skillRepository.findById(skillRequestDto.getSkillId())
                 .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
         if (!skill.isActive()) {
-            throw new SkillUnavailableException(
-                    "This skill is currently unavailable"
-            );
+            throw new SkillUnavailableException("This skill is currently unavailable");
         }
 
         userSkill.setSkill(skill);
         userSkill.setSkillType(skillRequestDto.getSkillType());
         userSkill.setLevel(skillRequestDto.getLevel());
+
         if (skillRequestDto.getSkillType() == SkillType.TEACH) {
             userSkill.setExperience(skillRequestDto.getExperience());
             userSkill.setDescription(skillRequestDto.getDescription());
@@ -127,7 +118,10 @@ public class SkillService {
             userSkill.setDescription(null);
             userSkill.setLearningGoal(skillRequestDto.getLearningGoal());
         }
+
         UserSkill updated = userSkillRepository.save(userSkill);
+
+        matchingService.refreshMatchesForUser(user.getId());
 
         return convertToResponse(updated);
     }
@@ -135,26 +129,27 @@ public class SkillService {
     public void deleteSkill(Authentication authentication, Long id) {
         User user = getAuthenticatedUser(authentication);
 
-        UserSkill userSkill =  userSkillRepository.findByIdAndUserId(id,user.getId()).orElseThrow(()->
-                new SkillNotFoundException("Skill not found"));
+        UserSkill userSkill = userSkillRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new SkillNotFoundException("Skill not found"));
 
         userSkillRepository.delete(userSkill);
 
+        matchingService.refreshMatchesForUser(user.getId());
     }
 
     @Transactional(readOnly = true)
     public List<SkillResponseDto> getAvailableSkills() {
-
-        return skillRepository.findByActiveTrueOrderByNameAsc()
-                .stream()
+        return skillRepository.findByActiveTrueOrderByNameAsc().stream()
                 .map(this::convertMasterSkillToResponse)
                 .toList();
     }
+
     private User getAuthenticatedUser(Authentication authentication) {
-        String Email = authentication.getName();
-        return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
-                new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
+        String email = authentication.getName();
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
     }
+
     private SkillResponseDto convertToResponse(UserSkill userSkill) {
         return SkillResponseDto.builder()
                 .id(userSkill.getId())
@@ -168,13 +163,12 @@ public class SkillService {
                 .learningGoal(userSkill.getLearningGoal())
                 .build();
     }
-    private SkillResponseDto convertMasterSkillToResponse(Skill skill) {
 
+    private SkillResponseDto convertMasterSkillToResponse(Skill skill) {
         return SkillResponseDto.builder()
                 .skillId(skill.getId())
                 .skillName(skill.getName())
                 .category(skill.getCategory())
                 .build();
     }
-
 }

@@ -5,13 +5,17 @@ import com.SkillBridge.skillbridge.ExceptionHandling.EmailAlreadyExistsException
 import com.SkillBridge.skillbridge.ExceptionHandling.InvalidCredentialsException;
 import com.SkillBridge.skillbridge.dto.LoginRequestDto;
 import com.SkillBridge.skillbridge.dto.LoginResponseDto;
+import com.SkillBridge.skillbridge.dto.ProfileResponseDto;
 import com.SkillBridge.skillbridge.dto.SignupRequestDto;
 import com.SkillBridge.skillbridge.entity.User;
+import com.SkillBridge.skillbridge.entity.UserProfile;
 import com.SkillBridge.skillbridge.enums.Roles;
+import com.SkillBridge.skillbridge.repository.UserProfileRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -25,6 +29,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserProfileRepository userProfileRepository;
 
     public User signup(SignupRequestDto request) {
 
@@ -79,4 +84,5 @@ public class UserService {
         return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
                 new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
     }
+
 }

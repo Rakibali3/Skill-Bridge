@@ -11,6 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 @Table(name = "user_skills", uniqueConstraints = {@UniqueConstraint(name = "uk_user_skill_type",
                         columnNames = {
                                 "user_id",
@@ -26,6 +27,7 @@ public class UserSkill {
             name = "user_id",
             nullable = false
     )
+    @ToString.Exclude
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,6 +35,7 @@ public class UserSkill {
             name = "skill_id",
             nullable = false
     )
+    @ToString.Exclude
     private Skill skill;
 
     @Enumerated(EnumType.STRING)

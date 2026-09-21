@@ -1,9 +1,6 @@
 package com.SkillBridge.skillbridge.controller;
 
-import com.SkillBridge.skillbridge.dto.LoginRequestDto;
-import com.SkillBridge.skillbridge.dto.LoginResponseDto;
-import com.SkillBridge.skillbridge.dto.SignupRequestDto;
-import com.SkillBridge.skillbridge.dto.SignupResponseDto;
+import com.SkillBridge.skillbridge.dto.*;
 
 import com.SkillBridge.skillbridge.entity.User;
 
@@ -22,10 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -80,4 +74,6 @@ public class UserController {
         User user =  userService.isAuthenticated(authentication);
         return ResponseEntity.ok(user.getEmail());
     }
+
+
 }

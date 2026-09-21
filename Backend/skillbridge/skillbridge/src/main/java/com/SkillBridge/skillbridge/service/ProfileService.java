@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class ProfileService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final MatchingService matchingService;
 
     @Transactional
     public ProfileResponseDto getProfile(Authentication authentication) {
@@ -42,7 +43,7 @@ public class ProfileService {
         profile.setAvailability(request.getAvailability());
 
         userProfileRepository.save(profile);
-
+        matchingService.refreshMatchesForUser(user.getId());
         return convertToResponse(user,profile);
     }
 
@@ -76,6 +77,24 @@ public class ProfileService {
                 .build();
     }
 
+    public ProfileResponseDto getUserById(Authentication authentication, Long id) {
+        getAuthenticatedUser(authentication);
+        UserProfile profile = userProfileRepository.findById(id).orElseThrow(()-> new AuthenticatedUserNotFoundException(
+                "User profile not found"
+        ));
+        return ProfileResponseDto.builder()
+                .id(profile.getUser().getId())
+                .userName(profile.getUser().getUserName())
+                .email(profile.getUser().getEmail())
+                .bio(profile.getBio())
+                .location(profile.getLocation())
+                .learningStyle(profile.getLearningStyle())
+                .experience(profile.getExperience())
+                .preferredFormat(profile.getPreferredFormat())
+                .availability(profile.getAvailability())
+                .avatarUrl(profile.getAvatarUrl())
+                .build();
+    }
     private UserProfile createEmptyProfile(User user) {
         UserProfile profile = UserProfile.builder()
                 .user(user)
