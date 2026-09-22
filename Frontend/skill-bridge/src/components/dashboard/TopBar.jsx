@@ -7,15 +7,20 @@ import {
   User,
   Settings,
   LogOut,
+  UserRoundArrowLeft,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useReceivedExchangeRequests } from "../../assets/hooks/useExchangeRequestData";
 
 import api from "../../API/axios";
 import { useProfileData } from "../../assets/hooks/useProfileData";
 
 export default function TopBar({ onMenuClick }) {
   const navigate = useNavigate();
+  const { data: requests = [] } = useReceivedExchangeRequests();
+  const pendingCount = requests.filter((r) => r.status === "PENDING").length;
+
   const queryClient = useQueryClient();
 
   const [profileOpen, setProfileOpen] = useState(false);
@@ -122,6 +127,21 @@ export default function TopBar({ onMenuClick }) {
         </button>
 
 
+        {/* {Pending Requests} */}
+        <button
+            type="button"
+            onClick={() => navigate("/requests")}
+            className="relative inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+        >
+            <UserRoundArrowLeft size={20} />
+            <span>Requests</span>
+            {pendingCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {pendingCount}
+                </span>
+            )}
+        </button>
+
         {/* Notifications */}
         <button
           type="button"
@@ -181,9 +201,8 @@ export default function TopBar({ onMenuClick }) {
             {/* Chevron */}
             <ChevronDown
               size={16}
-              className={`hidden text-slate-400 transition-transform sm:block ${
-                profileOpen ? "rotate-180" : ""
-              }`}
+              className={`hidden text-slate-400 transition-transform sm:block ${profileOpen ? "rotate-180" : ""
+                }`}
             />
 
           </button>

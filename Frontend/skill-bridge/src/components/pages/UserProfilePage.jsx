@@ -51,7 +51,7 @@ export default function UserProfilePage() {
         <DashboardLayout>
             <button
                 onClick={() => navigate(-1)}
-                className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600"
+                className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 cursor-pointer"
             >
                 <ArrowLeft size={16} />
                 Back to matches
