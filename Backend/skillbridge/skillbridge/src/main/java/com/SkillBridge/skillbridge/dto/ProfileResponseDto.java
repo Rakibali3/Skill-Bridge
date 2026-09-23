@@ -3,9 +3,15 @@ package com.SkillBridge.skillbridge.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ProfileResponseDto {
+
+    /*
+     * This is USER ID.
+     */
     private Long id;
 
     private String userName;
@@ -25,4 +31,6 @@ public class ProfileResponseDto {
     private String availability;
 
     private String avatarUrl;
+
+    private List<ProfileSkillResponseDto> skills;
 }

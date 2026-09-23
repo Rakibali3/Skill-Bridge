@@ -64,7 +64,7 @@ export function useReceivedExchangeRequests() {
             const { data } = await api.get("/exchange-requests/received");
             return data;
         },
-        refetchInterval: 30000, // re-check every 30s
+        refetchInterval: 30000, 
     });
 }
 
@@ -129,5 +129,22 @@ export function useRejectExchangeRequest() {
 
         },
 
+    });
+}
+
+export function useAllExchangeRequests() {
+    return useQuery({
+        queryKey: ["exchange-requests", "all"],
+        queryFn: async () => {
+            const [sentResponse, receivedResponse] = await Promise.all([
+                api.get("/exchange-requests/sent"),
+                api.get("/exchange-requests/received"),
+            ]);
+
+            return {
+                sent: sentResponse.data,
+                received: receivedResponse.data,
+            };
+        },
     });
 }

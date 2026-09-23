@@ -444,9 +444,6 @@ function MatchScore({ score }) {
     );
 }
 
-/* ============================================================
-   FILTER BUTTON COMPONENT
-============================================================ */
 
 function FilterButton({ active, onClick, children }) {
     return (

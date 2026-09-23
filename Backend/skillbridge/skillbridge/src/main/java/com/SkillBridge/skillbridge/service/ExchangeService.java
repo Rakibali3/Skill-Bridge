@@ -1,0 +1,343 @@
+package com.SkillBridge.skillbridge.service;
+
+import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
+import com.SkillBridge.skillbridge.dto.ExchangeCreateRequestDto;
+import com.SkillBridge.skillbridge.dto.ExchangeResponseDto;
+import com.SkillBridge.skillbridge.dto.ExchangeSkillResponseDto;
+import com.SkillBridge.skillbridge.entity.Exchange;
+import com.SkillBridge.skillbridge.entity.ExchangeSkill;
+import com.SkillBridge.skillbridge.entity.Skill;
+import com.SkillBridge.skillbridge.entity.User;
+import com.SkillBridge.skillbridge.entity.UserSkill;
+import com.SkillBridge.skillbridge.enums.ExchangeRequestStatus;
+import com.SkillBridge.skillbridge.enums.ExchangeSkillDirection;
+import com.SkillBridge.skillbridge.enums.ExchangeStatus;
+import com.SkillBridge.skillbridge.enums.SkillType;
+import com.SkillBridge.skillbridge.repository.ExchangeRepository;
+import com.SkillBridge.skillbridge.repository.ExchangeRequestRepository;
+import com.SkillBridge.skillbridge.repository.ExchangeSkillRepository;
+import com.SkillBridge.skillbridge.repository.UserRepository;
+import com.SkillBridge.skillbridge.repository.UserSkillRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ExchangeService {
+
+    private final ExchangeRepository exchangeRepository;
+    private final ExchangeSkillRepository exchangeSkillRepository;
+    private final ExchangeRequestRepository exchangeRequestRepository;
+    private final UserRepository userRepository;
+    private final UserSkillRepository userSkillRepository;
+
+    public ExchangeResponseDto createExchange(
+            Authentication authentication,
+            ExchangeCreateRequestDto request
+    ) {
+
+        User currentUser = getAuthenticatedUser(authentication);
+
+        User partner = userRepository.findById(request.getPartnerId())
+                .orElseThrow(() -> new RuntimeException("Partner not found"));
+
+        if (currentUser.getId().equals(partner.getId())) {
+            throw new RuntimeException("You cannot create an exchange with yourself");
+        }
+
+
+        if (!areConnected(currentUser.getId(), partner.getId())) {
+            throw new RuntimeException(
+                    "You can start an exchange only with a connected user"
+            );
+        }
+
+        User user1;
+        User user2;
+
+        if (currentUser.getId() < partner.getId()) {
+            user1 = currentUser;
+            user2 = partner;
+        } else {
+            user1 = partner;
+            user2 = currentUser;
+        }
+
+        boolean exchangeExists =
+                exchangeRepository.existsByUser1IdAndUser2IdAndStatus(
+                        user1.getId(),
+                        user2.getId(),
+                        ExchangeStatus.ACTIVE
+                );
+
+        if (exchangeExists) {
+            throw new RuntimeException(
+                    "An active exchange already exists between these users"
+            );
+        }
+
+        /*
+         * Validate current user's selected skills.
+         */
+        UserSkill myTeachingSkill = getUserSkill(
+                request.getMyTeachingSkillId(),
+                currentUser.getId()
+        );
+
+        UserSkill myLearningSkill = getUserSkill(
+                request.getMyLearningSkillId(),
+                currentUser.getId()
+        );
+
+        /*
+         * Validate partner's selected skills.
+         */
+        UserSkill partnerTeachingSkill = getUserSkill(
+                request.getPartnerTeachingSkillId(),
+                partner.getId()
+        );
+
+        UserSkill partnerLearningSkill = getUserSkill(
+                request.getPartnerLearningSkillId(),
+                partner.getId()
+        );
+
+        /*
+         * Validate skill directions.
+         */
+        validateSkillType(
+                myTeachingSkill,
+                SkillType.TEACH,
+                "Your teaching skill must be a TEACH skill"
+        );
+
+        validateSkillType(
+                myLearningSkill,
+                SkillType.LEARN,
+                "Your learning skill must be a LEARN skill"
+        );
+
+        validateSkillType(
+                partnerTeachingSkill,
+                SkillType.TEACH,
+                "Partner teaching skill must be a TEACH skill"
+        );
+
+        validateSkillType(
+                partnerLearningSkill,
+                SkillType.LEARN,
+                "Partner learning skill must be a LEARN skill"
+        );
+
+        /*
+         * Create the exchange.
+         */
+        Exchange exchange = Exchange.builder()
+                .user1(user1)
+                .user2(user2)
+                .status(ExchangeStatus.ACTIVE)
+                .build();
+
+        Exchange savedExchange = exchangeRepository.save(exchange);
+
+        /*
+         * Create the four skill relationships.
+         */
+        createExchangeSkill(
+                savedExchange,
+                currentUser,
+                myTeachingSkill.getSkill(),
+                ExchangeSkillDirection.TEACH
+        );
+
+        createExchangeSkill(
+                savedExchange,
+                currentUser,
+                myLearningSkill.getSkill(),
+                ExchangeSkillDirection.LEARN
+        );
+
+        createExchangeSkill(
+                savedExchange,
+                partner,
+                partnerTeachingSkill.getSkill(),
+                ExchangeSkillDirection.TEACH
+        );
+
+        createExchangeSkill(
+                savedExchange,
+                partner,
+                partnerLearningSkill.getSkill(),
+                ExchangeSkillDirection.LEARN
+        );
+
+        return convertToResponse(savedExchange);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExchangeResponseDto> getMyExchanges(
+            Authentication authentication
+    ) {
+
+        User user = getAuthenticatedUser(authentication);
+
+        return exchangeRepository
+                .findByUser1IdOrUser2IdOrderByCreatedAtDesc(
+                        user.getId(),
+                        user.getId()
+                )
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ExchangeResponseDto getExchange(
+            Authentication authentication,
+            Long exchangeId
+    ) {
+
+        User user = getAuthenticatedUser(authentication);
+
+        Exchange exchange = exchangeRepository.findById(exchangeId)
+                .orElseThrow(() -> new RuntimeException("Exchange not found"));
+
+        if (!isParticipant(exchange, user.getId())) {
+            throw new RuntimeException(
+                    "You are not a participant in this exchange"
+            );
+        }
+
+        return convertToResponse(exchange);
+    }
+
+    private boolean areConnected(Long userId1, Long userId2) {
+
+        return isAcceptedConnection(userId1, userId2)
+                || isAcceptedConnection(userId2, userId1);
+    }
+
+    private boolean isAcceptedConnection(
+            Long senderId,
+            Long receiverId
+    ) {
+
+        return exchangeRequestRepository
+                .findBySenderIdAndReceiverId(senderId, receiverId)
+                .map(request ->
+                        request.getStatus() == ExchangeRequestStatus.ACCEPTED
+                )
+                .orElse(false);
+    }
+
+    private UserSkill getUserSkill(
+            Long userSkillId,
+            Long userId
+    ) {
+
+        return userSkillRepository.findByIdAndUserId(userSkillId, userId)
+                .orElseThrow(() -> new RuntimeException("Selected skill does not belong to the user"));
+    }
+
+    private void validateSkillType(
+            UserSkill userSkill,
+            SkillType expectedType,
+            String message
+    ) {
+
+        if (userSkill.getSkillType() != expectedType) {
+            throw new RuntimeException(message);
+        }
+    }
+
+    private void createExchangeSkill(
+            Exchange exchange,
+            User user,
+            Skill skill,
+            ExchangeSkillDirection direction
+    ) {
+
+        ExchangeSkill exchangeSkill = ExchangeSkill.builder()
+                .exchange(exchange)
+                .user(user)
+                .skill(skill)
+                .direction(direction)
+                .build();
+
+        exchangeSkillRepository.save(exchangeSkill);
+    }
+
+    private boolean isParticipant(
+            Exchange exchange,
+            Long userId
+    ) {
+
+        return exchange.getUser1().getId().equals(userId)
+                || exchange.getUser2().getId().equals(userId);
+    }
+
+    private ExchangeResponseDto convertToResponse(
+            Exchange exchange
+    ) {
+
+        List<ExchangeSkillResponseDto> skills =
+                exchangeSkillRepository
+                        .findByExchangeId(exchange.getId())
+                        .stream()
+                        .map(exchangeSkill ->
+                                ExchangeSkillResponseDto.builder()
+                                        .userId(
+                                                exchangeSkill
+                                                        .getUser()
+                                                        .getId()
+                                        )
+                                        .skillId(
+                                                exchangeSkill
+                                                        .getSkill()
+                                                        .getId()
+                                        )
+                                        .skillName(
+                                                exchangeSkill
+                                                        .getSkill()
+                                                        .getName()
+                                        )
+                                        .direction(
+                                                exchangeSkill
+                                                        .getDirection()
+                                        )
+                                        .build()
+                        )
+                        .toList();
+
+        return ExchangeResponseDto.builder()
+                .id(exchange.getId())
+                .user1Id(exchange.getUser1().getId())
+                .user1Name(exchange.getUser1().getUserName())
+                .user2Id(exchange.getUser2().getId())
+                .user2Name(exchange.getUser2().getUserName())
+                .status(exchange.getStatus())
+                .createdAt(exchange.getCreatedAt())
+                .skills(skills)
+                .build();
+    }
+
+    private User getAuthenticatedUser(
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        return userRepository
+                .findByEmailIgnoreCase(email)
+                .orElseThrow(() ->
+                        new AuthenticatedUserNotFoundException(
+                                "Authenticated user not found"
+                        )
+                );
+    }
+}

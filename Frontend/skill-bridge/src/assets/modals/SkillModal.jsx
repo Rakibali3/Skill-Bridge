@@ -97,6 +97,7 @@ export default function SkillModal({
     if (!isOpen) return;
 
     if (skill) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         skillId: skill.skillId || "",
         skillType: skill.skillType || "TEACH",
