@@ -11,14 +11,17 @@ import {
 
 import DashboardLayout from "../dashboard/DashboardLayout";
 import { useMyExchanges } from "../../assets/hooks/useExchangeData";
+import { useNavigate } from "react-router-dom";
 
 export default function MyExchangesPage() {
+
     const {
         data: exchanges = [],
         isLoading,
         error,
     } = useMyExchanges();
-
+    console.log(exchanges);
+    
     if (isLoading) {
         return (
             <DashboardLayout>
@@ -91,6 +94,7 @@ export default function MyExchangesPage() {
 
 function ExchangeCard({ exchange }) {
     const status = exchange.status;
+        const navigate = useNavigate();
 
     const statusConfig = getStatusConfig(status);
 
@@ -210,6 +214,7 @@ function ExchangeCard({ exchange }) {
                                 : "cursor-not-allowed bg-slate-200 text-slate-400"
                         }
                     `}
+                    onClick={() => { navigate(`/exchanges/${exchange.id}`);}}
                 >
                     {status === "ACTIVE"
                         ? "Open Exchange"

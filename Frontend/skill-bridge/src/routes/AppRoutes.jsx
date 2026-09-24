@@ -10,25 +10,27 @@ import FindMatchesPage from "../components/pages/FindMatchesPage";
 import UserProfilePage from "../components/pages/UserProfilePage";
 import IncomingRequestsPage from "../components/pages/IncomingRequestsPage";
 import MyExchangesPage from "../components/pages/MyExchangesPage";
+import ExchangeWorkspacePage from "../components/pages/ExchangeWorkspacePage";
 
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage/>} />
+      <Route path="/" element={<LandingPage />} />
 
-      <Route path="/signup" element={<SignupPage/>} />
+      <Route path="/signup" element={<SignupPage />} />
 
-      <Route path="/login" element={<LoginPage/>} />
-      
+      <Route path="/login" element={<LoginPage />} />
+
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/profile" element={<ProfilePage />} />
-         <Route path="/profile/:userId" element={<UserProfilePage />} />
+        <Route path="/profile/:userId" element={<UserProfilePage />} />
         <Route path="/my-skills" element={<MySkillsPage />} />
         <Route path="/matches" element={<FindMatchesPage />} />
         <Route path="/requests" element={<IncomingRequestsPage />} />
         <Route path="/exchanges" element={<MyExchangesPage />} />
+        <Route path="/exchanges/:exchangeId" element={<ExchangeWorkspacePage />}/>
       </Route>
 
     </Routes>
