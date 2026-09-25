@@ -41,11 +41,9 @@ export function useCreateTask() {
             return data;
         },
 
-        onSuccess: async (data) => {
-            // Immediately refetch tasks
-            await queryClient.refetchQueries({
-                queryKey: ["tasks", data.exchangeId],
-                type: "active",
+        onSuccess: async () => {
+            queryClient.invalidateQueries({
+                queryKey: ["tasks",],
             });
         },
     });
@@ -68,11 +66,9 @@ export function useSubmitTask() {
             return data;
         },
 
-        onSuccess: async (data) => {
-            // Immediately fetch fresh task data
-            await queryClient.refetchQueries({
-                queryKey: ["tasks", data.exchangeId],
-                type: "active",
+        onSuccess: async () => {
+             queryClient.invalidateQueries({
+                queryKey: ["tasks",],
             });
         },
     });
@@ -94,11 +90,10 @@ export function useCompleteTask() {
             return data;
         },
 
-        onSuccess: async (data) => {
+        onSuccess: async () => {
             // Immediately fetch fresh task data
-            await queryClient.refetchQueries({
-                queryKey: ["tasks", data.exchangeId],
-                type: "active",
+              queryClient.invalidateQueries({
+                queryKey: ["tasks",],
             });
         },
     });

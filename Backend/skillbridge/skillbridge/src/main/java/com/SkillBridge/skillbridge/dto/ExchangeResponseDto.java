@@ -19,6 +19,9 @@ public class ExchangeResponseDto {
     private Long user2Id;
     private String user2Name;
 
+    private String user1AvatarUrl;
+    private String user2AvatarUrl;
+
     private ExchangeStatus status;
 
     private LocalDateTime createdAt;

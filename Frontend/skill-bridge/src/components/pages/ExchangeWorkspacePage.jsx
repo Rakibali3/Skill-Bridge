@@ -389,6 +389,7 @@ export default function ExchangeWorkspacePage() {
                         )}
                     </div>
                 </div>
+
             </div>
 
             {/* Create Task Modal */}

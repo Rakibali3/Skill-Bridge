@@ -41,6 +41,7 @@ public class WebConfig {
                       .requestMatchers(HttpMethod.POST, "/signup").permitAll()
                       .requestMatchers(HttpMethod.POST, "/login").permitAll()
                       .requestMatchers("/admin/**").hasRole("ADMIN")
+                      .requestMatchers("/ws/**").permitAll()
                       .anyRequest().authenticated())
               .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
               .logout(logout -> logout.disable())

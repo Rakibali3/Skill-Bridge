@@ -6,7 +6,6 @@ import {
   User,
   BookOpen,
   Users,
-  CheckSquare,
   MessageSquare,
   UsersRound,
   Trophy,
@@ -40,11 +39,6 @@ export default function Sidebar({ isOpen, onClose }) {
       label: "My Exchanges",
       icon: Repeat2,
       path: "/exchanges",
-    },
-    {
-      label: "Tasks",
-      icon: CheckSquare,
-      path: "/tasks",
     },
     {
       label: "Messages",

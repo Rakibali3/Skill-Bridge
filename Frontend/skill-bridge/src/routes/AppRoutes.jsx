@@ -11,6 +11,7 @@ import UserProfilePage from "../components/pages/UserProfilePage";
 import IncomingRequestsPage from "../components/pages/IncomingRequestsPage";
 import MyExchangesPage from "../components/pages/MyExchangesPage";
 import ExchangeWorkspacePage from "../components/pages/ExchangeWorkspacePage";
+import ChatPage from "../components/pages/ChatPage";
 
 
 function AppRoutes() {
@@ -31,6 +32,7 @@ function AppRoutes() {
         <Route path="/requests" element={<IncomingRequestsPage />} />
         <Route path="/exchanges" element={<MyExchangesPage />} />
         <Route path="/exchanges/:exchangeId" element={<ExchangeWorkspacePage />}/>
+        <Route path="/messages" element={<ChatPage />} />
       </Route>
 
     </Routes>

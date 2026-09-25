@@ -20,7 +20,6 @@ export default function MyExchangesPage() {
         isLoading,
         error,
     } = useMyExchanges();
-    console.log(exchanges);
     
     if (isLoading) {
         return (

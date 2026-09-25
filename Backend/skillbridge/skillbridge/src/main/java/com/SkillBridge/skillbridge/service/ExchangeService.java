@@ -4,20 +4,12 @@ import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundEx
 import com.SkillBridge.skillbridge.dto.ExchangeCreateRequestDto;
 import com.SkillBridge.skillbridge.dto.ExchangeResponseDto;
 import com.SkillBridge.skillbridge.dto.ExchangeSkillResponseDto;
-import com.SkillBridge.skillbridge.entity.Exchange;
-import com.SkillBridge.skillbridge.entity.ExchangeSkill;
-import com.SkillBridge.skillbridge.entity.Skill;
-import com.SkillBridge.skillbridge.entity.User;
-import com.SkillBridge.skillbridge.entity.UserSkill;
+import com.SkillBridge.skillbridge.entity.*;
 import com.SkillBridge.skillbridge.enums.ExchangeRequestStatus;
 import com.SkillBridge.skillbridge.enums.ExchangeSkillDirection;
 import com.SkillBridge.skillbridge.enums.ExchangeStatus;
 import com.SkillBridge.skillbridge.enums.SkillType;
-import com.SkillBridge.skillbridge.repository.ExchangeRepository;
-import com.SkillBridge.skillbridge.repository.ExchangeRequestRepository;
-import com.SkillBridge.skillbridge.repository.ExchangeSkillRepository;
-import com.SkillBridge.skillbridge.repository.UserRepository;
-import com.SkillBridge.skillbridge.repository.UserSkillRepository;
+import com.SkillBridge.skillbridge.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -35,6 +27,7 @@ public class ExchangeService {
     private final ExchangeRequestRepository exchangeRequestRepository;
     private final UserRepository userRepository;
     private final UserSkillRepository userSkillRepository;
+    private final UserProfileRepository userProfileRepository;
 
     public ExchangeResponseDto createExchange(
             Authentication authentication,
@@ -318,12 +311,21 @@ public class ExchangeService {
                 .id(exchange.getId())
                 .user1Id(exchange.getUser1().getId())
                 .user1Name(exchange.getUser1().getUserName())
+                .user1AvatarUrl(getAvatarUrl(exchange.getUser1().getId()))
                 .user2Id(exchange.getUser2().getId())
                 .user2Name(exchange.getUser2().getUserName())
+                .user2AvatarUrl(getAvatarUrl(exchange.getUser2().getId()))
                 .status(exchange.getStatus())
                 .createdAt(exchange.getCreatedAt())
                 .skills(skills)
                 .build();
+    }
+
+    private String getAvatarUrl(Long id) {
+        return userProfileRepository
+                .findByUserId(id)
+                .map(UserProfile::getAvatarUrl)
+                .orElse(null);
     }
 
     private User getAuthenticatedUser(
