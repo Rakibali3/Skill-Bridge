@@ -6,12 +6,12 @@ import com.SkillBridge.skillbridge.dto.CommunityResponseDto;
 import com.SkillBridge.skillbridge.service.CommunityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,11 +31,18 @@ public class CommunityController {
 
 
     @GetMapping
-    public ResponseEntity<List<CommunityResponseDto>> getCommunities(
-            Authentication authentication
+    public ResponseEntity<Page<CommunityResponseDto>> getCommunities(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
     ) {
-
-        return ResponseEntity.ok(communityService.getCommunities(authentication));
+        return ResponseEntity.ok(
+                communityService.getCommunities(
+                        authentication,
+                        page,
+                        size
+                )
+        );
     }
 
 
@@ -110,15 +117,18 @@ public class CommunityController {
     }
 
     @GetMapping("/{communityId}/members")
-    public ResponseEntity<List<CommunityMemberResponseDto>> getMembers(
+    public ResponseEntity<Page<CommunityMemberResponseDto>> getMembers(
             Authentication authentication,
-            @PathVariable Long communityId
+            @PathVariable Long communityId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-
         return ResponseEntity.ok(
                 communityService.getMembers(
                         authentication,
-                        communityId
+                        communityId,
+                        page,
+                        size
                 )
         );
     }

@@ -15,6 +15,10 @@ import com.SkillBridge.skillbridge.repository.UserProfileRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -59,15 +63,22 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommunityResponseDto> getCommunities(Authentication authentication) {
-
+    public Page<CommunityResponseDto> getCommunities(
+            Authentication authentication,
+            int page,
+            int size
+    ) {
         User user = getAuthenticatedUser(authentication);
 
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
         return communityRepository
-                .findByActiveTrueOrderByCreatedAtDesc()
-                .stream()
-                .map(community -> convertToResponse(community, user))
-                .toList();
+                .findByActiveTrue(pageable)
+                .map(community -> convertToResponse(community, user));
     }
 
     @Transactional(readOnly = true)
@@ -167,30 +178,52 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommunityMemberResponseDto> getMembers(Authentication authentication, Long communityId) {
+    public Page<CommunityMemberResponseDto> getMembers(
+            Authentication authentication,
+            Long communityId,
+            int page,
+            int size
+    ) {
 
         User currentUser = getAuthenticatedUser(authentication);
 
         Community community = getActiveCommunity(communityId);
 
         // Only members can view the member list
-        if (!communityMemberRepository.existsByCommunityIdAndUserId(communityId, currentUser.getId())) {
+        if (!communityMemberRepository.existsByCommunityIdAndUserId(
+                communityId,
+                currentUser.getId()
+        )) {
             throw new RuntimeException("Join the community to view its members");
         }
 
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.ASC,
+                        "joinedAt"
+                )
+        );
+
         return communityMemberRepository
-                .findByCommunityIdOrderByJoinedAtAsc(communityId)
-                .stream()
+                .findByCommunityIdOrderByJoinedAtAsc(
+                        communityId,
+                        pageable
+                )
                 .map(member ->
                         CommunityMemberResponseDto.builder()
                                 .userId(member.getUser().getId())
                                 .userName(member.getUser().getUserName())
                                 .role(member.getRole())
-                                .avatarUrl(getAvatarUrl(member.getUser().getId()))
+                                .avatarUrl(
+                                        getAvatarUrl(
+                                                member.getUser().getId()
+                                        )
+                                )
                                 .joinedAt(member.getJoinedAt())
                                 .build()
-                )
-                .toList();
+                );
     }
 
     private String getAvatarUrl(Long id) {
