@@ -13,4 +13,6 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
     List<Skill> findByActiveTrueOrderByNameAsc();
 
     List<Skill> findAllByOrderByNameAsc();
+
+    List<Skill> findTop5ByNameContainingIgnoreCase(String name);
 }

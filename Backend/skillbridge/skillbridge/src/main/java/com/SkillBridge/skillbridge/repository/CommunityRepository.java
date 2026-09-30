@@ -12,4 +12,5 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
     boolean existsByNameIgnoreCase(String name);
     Optional<Community> findByIdAndActiveTrue(Long id);
     Page<Community> findByActiveTrue(Pageable pageable);
+    List<Community> findTop5ByNameContainingIgnoreCaseAndActiveTrue(String name);
 }
