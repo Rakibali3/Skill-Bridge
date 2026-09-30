@@ -2,7 +2,7 @@ package com.SkillBridge.skillbridge.controller;
 
 import com.SkillBridge.skillbridge.dto.AdminSkillRequestDto;
 import com.SkillBridge.skillbridge.entity.Skill;
-import com.SkillBridge.skillbridge.service.AdminService;
+import com.SkillBridge.skillbridge.service.AdminSkillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,9 +15,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/admin/skills")
 @RequiredArgsConstructor
-public class AdminController {
+public class AdminSkillController {
 
-    private final AdminService adminSkillService;
+    private final AdminSkillService adminSkillService;
 
     @PostMapping
     public ResponseEntity<Skill> createSkill(

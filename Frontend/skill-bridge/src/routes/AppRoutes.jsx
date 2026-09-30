@@ -14,6 +14,11 @@ import ExchangeWorkspacePage from "../components/pages/ExchangeWorkspacePage";
 import ChatPage from "../components/pages/ChatPage";
 import CommunitiesPage from "../components/pages/CommunitiesPage";
 import CommunityDetailsPage from "../components/pages/CommunityDetailsPage";
+import AdminRoute from "./AdminRoute";
+import AdminDashboardPage from "../components/pages/admin/AdminDashboardPage";
+import AdminSkillsPage from "../components/pages/admin/AdminSkillsPage";
+import AdminLearningPathsPage from "../components/pages/admin/AdminLearningPathsPage";
+import AdminLearningPathDetailsPage from "../components/pages/admin/AdminLearningPathDetailsPage";
 
 
 function AppRoutes() {
@@ -33,10 +38,16 @@ function AppRoutes() {
         <Route path="/matches" element={<FindMatchesPage />} />
         <Route path="/requests" element={<IncomingRequestsPage />} />
         <Route path="/exchanges" element={<MyExchangesPage />} />
-        <Route path="/exchanges/:exchangeId" element={<ExchangeWorkspacePage />}/>
+        <Route path="/exchanges/:exchangeId" element={<ExchangeWorkspacePage />} />
         <Route path="/messages" element={<ChatPage />} />
-        <Route path="/communities" element={<CommunitiesPage />}/>
-        <Route path="/communities/:communityId" element={<CommunityDetailsPage />}/>
+        <Route path="/communities" element={<CommunitiesPage />} />
+        <Route path="/communities/:communityId" element={<CommunityDetailsPage />} />
+      </Route>
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/skills" element={<AdminSkillsPage />}/>
+        <Route path="/admin/learning-paths" element={<AdminLearningPathsPage />} />
+        <Route path="/admin/learning-paths/:pathId" element={<AdminLearningPathDetailsPage />}/>
       </Route>
 
     </Routes>

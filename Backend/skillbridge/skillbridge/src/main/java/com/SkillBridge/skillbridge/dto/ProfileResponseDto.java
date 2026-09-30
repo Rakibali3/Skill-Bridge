@@ -1,5 +1,6 @@
 package com.SkillBridge.skillbridge.dto;
 
+import com.SkillBridge.skillbridge.enums.Roles;
 import lombok.Builder;
 import lombok.Data;
 
@@ -31,6 +32,8 @@ public class ProfileResponseDto {
     private String availability;
 
     private String avatarUrl;
+
+    private Roles role;
 
     private List<ProfileSkillResponseDto> skills;
 }

@@ -164,12 +164,6 @@ public class ProfileService {
 
         return ProfileResponseDto.builder()
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * Return User.id
-                 * NOT UserProfile.id
-                 */
                 .id(user.getId())
 
                 .userName(user.getUserName())
@@ -182,7 +176,7 @@ public class ProfileService {
                 .preferredFormat(profile.getPreferredFormat())
                 .availability(profile.getAvailability())
                 .avatarUrl(profile.getAvatarUrl())
-
+                .role(user.getRole())
                 .skills(skills)
 
                 .build();
@@ -199,20 +193,8 @@ public class ProfileService {
 
         return ProfileSkillResponseDto.builder()
 
-                /*
-                 * ID from user_skills table
-                 *
-                 * Example:
-                 * Harsha React = 9
-                 */
                 .userSkillId(userSkill.getId())
 
-                /*
-                 * ID from skills table
-                 *
-                 * Example:
-                 * React = 1
-                 */
                 .skillId(userSkill.getSkill().getId())
 
                 .skillName(userSkill.getSkill().getName())

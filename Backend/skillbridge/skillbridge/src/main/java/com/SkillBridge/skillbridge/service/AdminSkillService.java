@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AdminService {
+public class AdminSkillService {
     private final SkillRepository skillRepository;
 
     public Skill createSkill(AdminSkillRequestDto request) {
