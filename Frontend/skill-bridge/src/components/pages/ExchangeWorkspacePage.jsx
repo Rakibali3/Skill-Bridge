@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { useExchange } from "../../assets/hooks/useExchangeData";
+import api from "../../API/axios";
 import { useProfileData } from "../../assets/hooks/useProfileData";
 import {
     useExchangeTasks,
@@ -69,6 +71,7 @@ function TaskStatusBadge({ status }) {
 export default function ExchangeWorkspacePage() {
     const { exchangeId } = useParams();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [showCreateTask, setShowCreateTask] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -102,6 +105,23 @@ export default function ExchangeWorkspacePage() {
      * Complete task mutation
      */
     const completeTask = useCompleteTask();
+
+    /*
+     * Confirm exchange completion.
+     * Both participants must confirm before the backend changes status to COMPLETED.
+     */
+    const confirmExchangeCompletion = useMutation({
+        mutationFn: async () => {
+            const response = await api.post(`/exchanges/${exchangeId}/complete`);
+            return response.data;
+        },
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["exchange"] }),
+                queryClient.invalidateQueries({ queryKey: ["exchanges"] }),
+            ]);
+        },
+    });
 
     /*
      * Find partner
@@ -240,6 +260,13 @@ export default function ExchangeWorkspacePage() {
     }
 
     const canCreateTask = exchange.status === "ACTIVE";
+    const isUser1 = Number(exchange.user1Id) === Number(currentUser.id);
+    const alreadyConfirmed = isUser1
+        ? Boolean(exchange.user1CompletionConfirmed)
+        : Boolean(exchange.user2CompletionConfirmed);
+    const partnerConfirmed = isUser1
+        ? Boolean(exchange.user2CompletionConfirmed)
+        : Boolean(exchange.user1CompletionConfirmed);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -277,8 +304,50 @@ export default function ExchangeWorkspacePage() {
                             </div>
                         </div>
 
-                        <StatusBadge status={exchange.status} />
+                        <div className="flex flex-col items-start gap-3 sm:items-end">
+                            <StatusBadge status={exchange.status} />
+                            {exchange.status === "ACTIVE" && (
+                                <div className="flex flex-col items-start gap-2 sm:items-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => confirmExchangeCompletion.mutate()}
+                                        disabled={alreadyConfirmed || confirmExchangeCompletion.isPending}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        {confirmExchangeCompletion.isPending
+                                            ? "Confirming..."
+                                            : alreadyConfirmed
+                                                ? "Completion Confirmed"
+                                                : "Confirm Exchange Completion"}
+                                    </button>
+                                    <p className="text-xs text-slate-500">
+                                        {alreadyConfirmed
+                                            ? "You have confirmed. Waiting for your partner."
+                                            : partnerConfirmed
+                                                ? "Your partner has confirmed completion."
+                                                : "Both participants must confirm to complete this exchange."}
+                                    </p>
+                                </div>
+                            )}
+                            {exchange.status === "COMPLETED" && exchange.completedAt && (
+                                <p className="text-xs text-slate-500">
+                                    Completed {new Date(exchange.completedAt).toLocaleDateString()}
+                                </p>
+                            )}
+                        </div>
                     </div>
+                    {confirmExchangeCompletion.isError && (
+                        <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {confirmExchangeCompletion.error?.response?.data?.message ||
+                                "Unable to confirm exchange completion. Please try again."}
+                        </p>
+                    )}
+                    {confirmExchangeCompletion.isSuccess && exchange.status === "ACTIVE" && (
+                        <p role="status" className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                            Your confirmation was saved. The exchange will be completed when both participants confirm.
+                        </p>
+                    )}
                 </div>
 
                 {/* Skills */}

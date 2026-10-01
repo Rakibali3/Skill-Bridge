@@ -74,4 +74,10 @@ public class TaskController {
                 )
         );
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TaskResponseDto>> getTasksByUser(Authentication authentication, @PathVariable Long userId
+    ) {
+        return ResponseEntity.ok(taskService.getTasksByUser(authentication, userId));
+    }
 }

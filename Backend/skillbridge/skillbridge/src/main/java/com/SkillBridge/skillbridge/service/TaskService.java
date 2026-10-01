@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -188,6 +189,21 @@ public class TaskService {
         return convertToResponse(taskRepository.save(task));
     }
 
+    @Transactional(readOnly = true)
+    public List<TaskResponseDto> getTasksByUser(Authentication authentication, Long userId) {
+        User currentUser = getAuthenticatedUser(authentication);
+
+        if (!currentUser.getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to access another user's tasks");
+        }
+
+        List<Task> tasks = taskRepository.findByAssignedToId(userId);
+
+        return tasks.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
     private User getAuthenticatedUser(
             Authentication authentication
     ) {
@@ -264,4 +280,6 @@ public class TaskService {
 
                 .build();
     }
+
+
 }

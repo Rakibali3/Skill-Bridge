@@ -19,6 +19,8 @@ import AdminDashboardPage from "../components/pages/admin/AdminDashboardPage";
 import AdminSkillsPage from "../components/pages/admin/AdminSkillsPage";
 import AdminLearningPathsPage from "../components/pages/admin/AdminLearningPathsPage";
 import AdminLearningPathDetailsPage from "../components/pages/admin/AdminLearningPathDetailsPage";
+import LearningJourneyPage from "../components/pages/LearningJourneyPage";
+import LearningPathsPage from "../components/pages/LearningPathsPage";
 
 
 function AppRoutes() {
@@ -42,6 +44,8 @@ function AppRoutes() {
         <Route path="/messages" element={<ChatPage />} />
         <Route path="/communities" element={<CommunitiesPage />} />
         <Route path="/communities/:communityId" element={<CommunityDetailsPage />} />
+        <Route path="/learning-paths" element={<LearningPathsPage />}/>
+        <Route path="/learning-paths/:pathId" element={<LearningJourneyPage />}/>
       </Route>
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboardPage />} />

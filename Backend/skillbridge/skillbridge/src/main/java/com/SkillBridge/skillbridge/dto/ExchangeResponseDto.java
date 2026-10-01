@@ -26,5 +26,9 @@ public class ExchangeResponseDto {
 
     private LocalDateTime createdAt;
 
+    private boolean user1CompletionConfirmed;
+    private boolean user2CompletionConfirmed;
+    private LocalDateTime completedAt;
+
     private List<ExchangeSkillResponseDto> skills;
 }

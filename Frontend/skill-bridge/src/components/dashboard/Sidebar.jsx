@@ -8,7 +8,7 @@ import {
   Users,
   MessageSquare,
   UsersRound,
-  Trophy,
+  Route,
   Bell,
   Settings,
 } from "lucide-react";
@@ -51,9 +51,9 @@ export default function Sidebar({ isOpen, onClose }) {
       path: "/communities",
     },
     {
-      label: "Challenges",
-      icon: Trophy,
-      path: "/challenges",
+      label: "Learning Paths",
+      icon: Route,
+      path: "/learning-paths",
     },
     {
       label: "Notifications",
@@ -146,10 +146,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     text-sm
                     font-medium
                     transition
-                    ${
-                      isActive
-                        ? "bg-indigo-50 text-indigo-600"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ${isActive
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }
                   `
                   }

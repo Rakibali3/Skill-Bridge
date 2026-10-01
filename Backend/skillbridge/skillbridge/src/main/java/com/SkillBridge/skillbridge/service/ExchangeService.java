@@ -5,16 +5,14 @@ import com.SkillBridge.skillbridge.dto.ExchangeCreateRequestDto;
 import com.SkillBridge.skillbridge.dto.ExchangeResponseDto;
 import com.SkillBridge.skillbridge.dto.ExchangeSkillResponseDto;
 import com.SkillBridge.skillbridge.entity.*;
-import com.SkillBridge.skillbridge.enums.ExchangeRequestStatus;
-import com.SkillBridge.skillbridge.enums.ExchangeSkillDirection;
-import com.SkillBridge.skillbridge.enums.ExchangeStatus;
-import com.SkillBridge.skillbridge.enums.SkillType;
+import com.SkillBridge.skillbridge.enums.*;
 import com.SkillBridge.skillbridge.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,6 +26,7 @@ public class ExchangeService {
     private final UserRepository userRepository;
     private final UserSkillRepository userSkillRepository;
     private final UserProfileRepository userProfileRepository;
+    private final TaskRepository taskRepository;
 
     public ExchangeResponseDto createExchange(
             Authentication authentication,
@@ -201,12 +200,52 @@ public class ExchangeService {
                 .orElseThrow(() -> new RuntimeException("Exchange not found"));
 
         if (!isParticipant(exchange, user.getId())) {
-            throw new RuntimeException(
-                    "You are not a participant in this exchange"
-            );
+            throw new RuntimeException("You are not a participant in this exchange");
         }
 
         return convertToResponse(exchange);
+    }
+
+    @Transactional
+    public ExchangeResponseDto confirmCompletion(Authentication authentication, Long exchangeId) {
+        User currentUser = getAuthenticatedUser(authentication);
+        Long userId = currentUser.getId();
+
+        Exchange exchange = exchangeRepository.findById(exchangeId)
+                .orElseThrow(() -> new RuntimeException("Exchange not found"));
+
+        if (!isParticipant(exchange, userId)) {
+            throw new RuntimeException("You are not a participant in this exchange");
+        }
+
+        if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
+            throw new RuntimeException("Only active exchanges can be completed");
+        }
+
+        List<Task> tasks = taskRepository.findByExchangeIdAndAssignedToId(exchangeId, userId);
+
+        boolean hasIncompleteTasks = tasks.stream().anyMatch(task -> task.getStatus() != TaskStatus.COMPLETED);
+
+        if (hasIncompleteTasks) {
+            throw new RuntimeException("You cannot confirm completion while you have incomplete tasks");
+        }
+
+        if (exchange.getUser1().getId().equals(userId)) {
+            exchange.setUser1CompletionConfirmed(true);
+        } else {
+            exchange.setUser2CompletionConfirmed(true);
+        }
+
+        if (exchange.isUser1CompletionConfirmed()
+                && exchange.isUser2CompletionConfirmed()) {
+
+            exchange.setStatus(ExchangeStatus.COMPLETED);
+            exchange.setCompletedAt(LocalDateTime.now());
+        }
+
+        Exchange savedExchange = exchangeRepository.save(exchange);
+
+        return convertToResponse(savedExchange);
     }
 
     private boolean areConnected(Long userId1, Long userId2) {
@@ -215,10 +254,7 @@ public class ExchangeService {
                 || isAcceptedConnection(userId2, userId1);
     }
 
-    private boolean isAcceptedConnection(
-            Long senderId,
-            Long receiverId
-    ) {
+    private boolean isAcceptedConnection(Long senderId, Long receiverId) {
 
         return exchangeRequestRepository
                 .findBySenderIdAndReceiverId(senderId, receiverId)
@@ -228,21 +264,12 @@ public class ExchangeService {
                 .orElse(false);
     }
 
-    private UserSkill getUserSkill(
-            Long userSkillId,
-            Long userId
-    ) {
-
+    private UserSkill getUserSkill(Long userSkillId, Long userId) {
         return userSkillRepository.findByIdAndUserId(userSkillId, userId)
                 .orElseThrow(() -> new RuntimeException("Selected skill does not belong to the user"));
     }
 
-    private void validateSkillType(
-            UserSkill userSkill,
-            SkillType expectedType,
-            String message
-    ) {
-
+    private void validateSkillType(UserSkill userSkill, SkillType expectedType, String message) {
         if (userSkill.getSkillType() != expectedType) {
             throw new RuntimeException(message);
         }
@@ -265,18 +292,13 @@ public class ExchangeService {
         exchangeSkillRepository.save(exchangeSkill);
     }
 
-    private boolean isParticipant(
-            Exchange exchange,
-            Long userId
-    ) {
+    private boolean isParticipant(Exchange exchange, Long userId) {
 
         return exchange.getUser1().getId().equals(userId)
                 || exchange.getUser2().getId().equals(userId);
     }
 
-    private ExchangeResponseDto convertToResponse(
-            Exchange exchange
-    ) {
+    private ExchangeResponseDto convertToResponse(Exchange exchange) {
 
         List<ExchangeSkillResponseDto> skills =
                 exchangeSkillRepository
@@ -284,25 +306,10 @@ public class ExchangeService {
                         .stream()
                         .map(exchangeSkill ->
                                 ExchangeSkillResponseDto.builder()
-                                        .userId(
-                                                exchangeSkill
-                                                        .getUser()
-                                                        .getId()
-                                        )
-                                        .skillId(
-                                                exchangeSkill
-                                                        .getSkill()
-                                                        .getId()
-                                        )
-                                        .skillName(
-                                                exchangeSkill
-                                                        .getSkill()
-                                                        .getName()
-                                        )
-                                        .direction(
-                                                exchangeSkill
-                                                        .getDirection()
-                                        )
+                                        .userId(exchangeSkill.getUser().getId())
+                                        .skillId(exchangeSkill.getSkill().getId())
+                                        .skillName(exchangeSkill.getSkill().getName())
+                                        .direction(exchangeSkill.getDirection())
                                         .build()
                         )
                         .toList();
@@ -317,6 +324,9 @@ public class ExchangeService {
                 .user2AvatarUrl(getAvatarUrl(exchange.getUser2().getId()))
                 .status(exchange.getStatus())
                 .createdAt(exchange.getCreatedAt())
+                .user1CompletionConfirmed(exchange.isUser1CompletionConfirmed())
+                .user2CompletionConfirmed(exchange.isUser2CompletionConfirmed())
+                .completedAt(exchange.getCompletedAt())
                 .skills(skills)
                 .build();
     }
@@ -342,4 +352,5 @@ public class ExchangeService {
                         )
                 );
     }
+
 }

@@ -98,3 +98,15 @@ export function useCompleteTask() {
         },
     });
 }
+
+
+export function useTasksByUser(userId) {
+  return useQuery({
+    queryKey: ["tasks", "user", userId],
+    queryFn: async () => {
+      const { data } = await api.get(`/tasks/user/${userId}`);
+      return data;
+    },
+    enabled: Boolean(userId),
+  });
+}

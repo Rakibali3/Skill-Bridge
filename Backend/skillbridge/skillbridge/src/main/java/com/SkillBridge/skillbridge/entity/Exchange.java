@@ -3,6 +3,7 @@ package com.SkillBridge.skillbridge.entity;
 import com.SkillBridge.skillbridge.enums.ExchangeStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +43,16 @@ public class Exchange {
     @Column(nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "user1_completion_confirmed", nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean user1CompletionConfirmed = false;
+
+    @Column(name = "user2_completion_confirmed", nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean user2CompletionConfirmed = false;
 
     private LocalDateTime completedAt;
 }

@@ -46,16 +46,14 @@ public class ExchangeController {
     }
 
     @GetMapping("/{exchangeId}")
-    public ResponseEntity<ExchangeResponseDto> getExchange(
-            Authentication authentication,
-            @PathVariable Long exchangeId
+    public ResponseEntity<ExchangeResponseDto> getExchange(Authentication authentication, @PathVariable Long exchangeId
     ) {
+        return ResponseEntity.ok(exchangeService.getExchange(authentication, exchangeId));
+    }
 
-        return ResponseEntity.ok(
-                exchangeService.getExchange(
-                        authentication,
-                        exchangeId
-                )
-        );
+    @PostMapping("/{exchangeId}/complete")
+    public ResponseEntity<ExchangeResponseDto> confirmCompletion(Authentication authentication,@PathVariable Long exchangeId
+    ) {
+        return ResponseEntity.ok(exchangeService.confirmCompletion(authentication, exchangeId));
     }
 }

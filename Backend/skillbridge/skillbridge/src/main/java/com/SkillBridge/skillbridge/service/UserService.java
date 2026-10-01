@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.stereotype.Service;
@@ -83,6 +84,12 @@ public class UserService {
         String Email = authentication.getName();
         return userRepository.findByEmailIgnoreCase(Email).orElseThrow(()->
                 new AuthenticatedUserNotFoundException("Authenticated User Not Found"));
+    }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        assert authentication != null;
+        return isAuthenticated(authentication);
     }
 
 }

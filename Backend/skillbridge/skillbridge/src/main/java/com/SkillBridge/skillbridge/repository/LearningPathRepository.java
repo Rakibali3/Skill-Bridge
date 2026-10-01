@@ -14,4 +14,8 @@ public interface LearningPathRepository
     boolean existsBySkillId(Long skillId);
 
     List<LearningPath> findAllByOrderByCreatedAtDesc();
+
+    Optional<LearningPath> findByIdAndActiveTrue(Long id);
+
+    List<LearningPath> findByActiveTrueOrderByCreatedAtDesc();
 }
