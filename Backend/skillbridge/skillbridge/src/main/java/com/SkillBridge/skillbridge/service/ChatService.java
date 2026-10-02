@@ -9,7 +9,9 @@ import com.SkillBridge.skillbridge.repository.ExchangeRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -33,22 +35,18 @@ public class ChatService {
 
         Exchange exchange = exchangeRepository.findById(exchangeId)
                 .orElseThrow(() ->
-                        new RuntimeException("Exchange not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange not found")
                 );
 
         // Only exchange participants can send messages
         if (!isParticipant(exchange, sender.getId())) {
-            throw new RuntimeException(
-                    "You are not a participant of this exchange"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant of this exchange");
         }
 
         if (exchange.getStatus() !=
                 com.SkillBridge.skillbridge.enums.ExchangeStatus.ACTIVE) {
 
-            throw new RuntimeException(
-                    "Chat is available only for active exchanges"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chat is available only for active exchanges");
         }
 
         String cleanedMessage = message == null
@@ -56,15 +54,11 @@ public class ChatService {
                 : message.trim();
 
         if (cleanedMessage.isEmpty()) {
-            throw new RuntimeException(
-                    "Message cannot be empty"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
 
         if (cleanedMessage.length() > 2000) {
-            throw new RuntimeException(
-                    "Message cannot exceed 2000 characters"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot exceed 2000 characters");
         }
 
         ChatMessage chatMessage = ChatMessage.builder()
@@ -90,13 +84,11 @@ public class ChatService {
 
         Exchange exchange = exchangeRepository.findById(exchangeId)
                 .orElseThrow(() ->
-                        new RuntimeException("Exchange not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange not found")
                 );
 
         if (!isParticipant(exchange, user.getId())) {
-            throw new RuntimeException(
-                    "You are not a participant of this exchange"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant of this exchange");
         }
 
         return chatMessageRepository
@@ -124,9 +116,7 @@ public class ChatService {
         if (authentication == null ||
                 !authentication.isAuthenticated()) {
 
-            throw new RuntimeException(
-                    "User is not authenticated"
-            );
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
         }
 
         String email = authentication.getName();
@@ -134,7 +124,7 @@ public class ChatService {
         return userRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
                 );
     }
 
