@@ -70,7 +70,7 @@ export default function FindMatchesPage() {
             await sendRequestMutation.mutateAsync(receiverId);
         } catch (error) {
             setRequestError(
-                error?.response?.data?.message || "Unable to send request. Please try again."
+                getApiErrorMessage(error, "Unable to send request. Please try again.")
             );
         }
     };
