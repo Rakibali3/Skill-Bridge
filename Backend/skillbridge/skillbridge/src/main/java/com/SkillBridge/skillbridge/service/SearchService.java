@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.dto.*;
 import com.SkillBridge.skillbridge.entity.Community;
 import com.SkillBridge.skillbridge.entity.Skill;
@@ -97,7 +99,7 @@ public class SearchService {
     private String getAvatarUrl(Long id) {
         UserProfile userProfile = userProfileRepository.findByUserId(id).orElse(null);
         if (userProfile == null) {
-            throw new RuntimeException("user not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found");
         }
         return  userProfile.getAvatarUrl();
     }
