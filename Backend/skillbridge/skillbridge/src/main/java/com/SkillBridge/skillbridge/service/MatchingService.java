@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.entity.Match;
 import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.entity.UserProfile;
@@ -117,11 +119,11 @@ public class MatchingService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found: " + userId));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
         User matchedUser = userRepository.findById(matchedUserId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found: " + matchedUserId));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + matchedUserId));
 
         notificationService.createNotification(
                 user.getId(),
