@@ -1,20 +1,17 @@
 package com.SkillBridge.skillbridge.config;
 
+import com.SkillBridge.skillbridge.ExceptionHandling.ApiErrorResponse;
 import com.SkillBridge.skillbridge.security.JwtAuthFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,43 +20,75 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig {
-//    private final UserDetailsService userDetailsService;
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
-      return httpSecurity
-              .csrf(csrfConfig -> csrfConfig.disable())
-              .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-              .authorizeHttpRequests(requests -> requests
-                      .requestMatchers(HttpMethod.POST, "/signup").permitAll()
-                      .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                      .requestMatchers("/admin/**").hasRole("ADMIN")
-                      .requestMatchers("/ws/**").permitAll()
-                      .anyRequest().authenticated())
-              .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-              .logout(logout -> logout.disable())
-              .exceptionHandling(exception -> exception
-                              // Not authenticated
-                              .authenticationEntryPoint(
-                                      (request, response, authException) ->
-                                              response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authentication required")
-                              )
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.POST, "/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/ws/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .logout(logout -> logout.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) ->
+                                writeSecurityError(
+                                        response,
+                                        HttpStatus.UNAUTHORIZED,
+                                        "Authentication is required to access this resource.",
+                                        request.getRequestURI()
+                                )
+                        )
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                writeSecurityError(
+                                        response,
+                                        HttpStatus.FORBIDDEN,
+                                        "You do not have permission to access this resource.",
+                                        request.getRequestURI()
+                                )
+                        )
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
 
-                              // Authenticated but not authorized
-                              .accessDeniedHandler(
-                                      (request, response, accessDeniedException) ->
-                                              response.sendError(HttpStatus.FORBIDDEN.value(), "Access denied")
-                              )
-              )
-              .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-              .build();
+    private void writeSecurityError(
+            jakarta.servlet.http.HttpServletResponse response,
+            HttpStatus status,
+            String message,
+            String path
+    ) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                new ApiErrorResponse(
+                        Instant.now(),
+                        status.value(),
+                        status.getReasonPhrase(),
+                        message,
+                        path,
+                        Map.of()
+                )
+        );
     }
 
     @Bean
@@ -69,54 +98,21 @@ public class WebConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
-
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH",
-                        "OPTIONS"
-                )
-        );
-
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
-
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
-//    @Bean
-//    public AuthenticationProvider authenticationProvider(){
-//        return new DaoAuthenticationProvider(userDetailsService);
-//    }
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration){
-//        return configuration.getAuthenticationManager();
-//    }
-     @Bean
-     public ModelMapper modelMapper() {
-          return new ModelMapper();
-     }
-
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 }
