@@ -11,7 +11,9 @@ import com.SkillBridge.skillbridge.repository.UserProfileRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import com.SkillBridge.skillbridge.repository.UserSkillRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -117,11 +119,11 @@ public class MatchingService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found: " + userId));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
         User matchedUser = userRepository.findById(matchedUserId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found: " + matchedUserId));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + matchedUserId));
 
         notificationService.createNotification(
                 user.getId(),
