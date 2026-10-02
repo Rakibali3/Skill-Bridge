@@ -205,6 +205,18 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(
+            org.springframework.web.server.ResponseStatusException exception) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        errors.put("message", exception.getReason() == null
+                ? "The request could not be completed."
+                : exception.getReason());
+
+        return ResponseEntity.status(exception.getStatusCode()).body(errors);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>>
     handleGeneralError(
