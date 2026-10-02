@@ -11,7 +11,9 @@ import com.SkillBridge.skillbridge.repository.PostLikeRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -38,12 +40,12 @@ public class PostLikeService {
         CommunityPost post = communityPostRepository
                 .findByIdAndCommunityId(postId, communityId)
                 .orElseThrow(() ->
-                        new RuntimeException("Post not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found")
                 );
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
                 );
 
         boolean alreadyLiked =
@@ -76,7 +78,7 @@ public class PostLikeService {
 
         communityPostRepository
                 .findByIdAndCommunityId(postId, communityId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
         postLikeRepository.deleteByPostIdAndUserId(
                 postId,
@@ -101,7 +103,7 @@ public class PostLikeService {
         communityPostRepository
                 .findByIdAndCommunityId(postId, communityId)
                 .orElseThrow(() ->
-                        new RuntimeException("Post not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found")
                 );
 
         return buildResponse(postId, userId);
@@ -120,9 +122,7 @@ public class PostLikeService {
                         );
 
         if (!member) {
-            throw new RuntimeException(
-                    "You must be a community member"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must be a community member");
         }
     }
 
