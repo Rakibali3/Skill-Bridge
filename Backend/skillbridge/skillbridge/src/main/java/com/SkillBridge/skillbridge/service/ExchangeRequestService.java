@@ -11,7 +11,9 @@ import com.SkillBridge.skillbridge.repository.ExchangeRequestRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,11 +32,11 @@ public class ExchangeRequestService {
         User sender = getAuthenticatedUser(authentication);
 
         User receiver = userRepository.findById(request.getReceiverId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         // Prevent sending request to yourself
         if (sender.getId().equals(receiver.getId())) {
-            throw new RuntimeException("You cannot send a request to yourself");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot send a request to yourself");
         }
 
         boolean alreadyPending = exchangeRequestRepository
@@ -45,7 +47,7 @@ public class ExchangeRequestService {
                         );
 
         if (alreadyPending) {
-            throw new RuntimeException("You have already sent a request to this user");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "You have already sent a request to this user");
         }
 
         ExchangeRequest exchangeRequest = exchangeRequestRepository
@@ -100,10 +102,10 @@ public class ExchangeRequestService {
 
         ExchangeRequest request = exchangeRequestRepository
                 .findByIdAndReceiverId(requestId, receiver.getId())
-                .orElseThrow(() -> new RuntimeException("Exchange request not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange request not found"));
 
         if (request.getStatus() != ExchangeRequestStatus.PENDING) {
-            throw new RuntimeException("Only pending requests can be accepted");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pending requests can be accepted");
         }
 
         request.setStatus(ExchangeRequestStatus.ACCEPTED);
@@ -127,10 +129,10 @@ public class ExchangeRequestService {
 
         ExchangeRequest request = exchangeRequestRepository
                 .findByIdAndReceiverId(requestId, receiver.getId())
-                .orElseThrow(() -> new RuntimeException("Exchange request not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange request not found"));
 
         if (request.getStatus() != ExchangeRequestStatus.PENDING) {
-            throw new RuntimeException("Only pending requests can be rejected");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only pending requests can be rejected");
         }
 
         request.setStatus(ExchangeRequestStatus.REJECTED);
