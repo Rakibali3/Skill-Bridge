@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import api from "../../../../API/axios";
+import getApiErrorMessage from "../../../../assets/utils/getApiErrorMessage";
 
 const INITIAL_FORM_STATE = {
     email: "",
@@ -95,11 +96,9 @@ export default function LoginPage() {
                     email: serverErrors.email || "",
                     password: serverErrors.password || "",
                 });
-                if (serverErrors.general || serverErrors.message) {
-                    setGeneralError(serverErrors.general || serverErrors.message);
-                }
+                setGeneralError(getApiErrorMessage(error, "Unable to log in. Please try again."));
             } else {
-                setGeneralError("Unable to connect to the server. Please try again.");
+                setGeneralError(getApiErrorMessage(error, "Unable to log in. Please try again."));
             }
         } finally {
             setLoading(false);
