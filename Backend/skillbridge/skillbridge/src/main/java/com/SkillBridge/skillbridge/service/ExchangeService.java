@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
 import com.SkillBridge.skillbridge.dto.ExchangeCreateRequestDto;
 import com.SkillBridge.skillbridge.dto.ExchangeResponseDto;
@@ -37,17 +39,15 @@ public class ExchangeService {
         User currentUser = getAuthenticatedUser(authentication);
 
         User partner = userRepository.findById(request.getPartnerId())
-                .orElseThrow(() -> new RuntimeException("Partner not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partner not found"));
 
         if (currentUser.getId().equals(partner.getId())) {
-            throw new RuntimeException("You cannot create an exchange with yourself");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot create an exchange with yourself");
         }
 
 
         if (!areConnected(currentUser.getId(), partner.getId())) {
-            throw new RuntimeException(
-                    "You can start an exchange only with a connected user"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You can start an exchange only with a connected user");
         }
 
         User user1;
@@ -69,9 +69,7 @@ public class ExchangeService {
                 );
 
         if (exchangeExists) {
-            throw new RuntimeException(
-                    "An active exchange already exists between these users"
-            );
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An active exchange already exists between these users");
         }
 
         /*
@@ -207,10 +205,10 @@ public class ExchangeService {
         User user = getAuthenticatedUser(authentication);
 
         Exchange exchange = exchangeRepository.findById(exchangeId)
-                .orElseThrow(() -> new RuntimeException("Exchange not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange not found"));
 
         if (!isParticipant(exchange, user.getId())) {
-            throw new RuntimeException("You are not a participant in this exchange");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant in this exchange");
         }
 
         return convertToResponse(exchange);
@@ -222,14 +220,14 @@ public class ExchangeService {
         Long userId = currentUser.getId();
 
         Exchange exchange = exchangeRepository.findById(exchangeId)
-                .orElseThrow(() -> new RuntimeException("Exchange not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exchange not found"));
 
         if (!isParticipant(exchange, userId)) {
-            throw new RuntimeException("You are not a participant in this exchange");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant in this exchange");
         }
 
         if (exchange.getStatus() != ExchangeStatus.ACTIVE) {
-            throw new RuntimeException("Only active exchanges can be completed");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only active exchanges can be completed");
         }
 
         List<Task> tasks = taskRepository.findByExchangeIdAndAssignedToId(exchangeId, userId);
@@ -237,7 +235,7 @@ public class ExchangeService {
         boolean hasIncompleteTasks = tasks.stream().anyMatch(task -> task.getStatus() != TaskStatus.COMPLETED);
 
         if (hasIncompleteTasks) {
-            throw new RuntimeException("You cannot confirm completion while you have incomplete tasks");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "You cannot confirm completion while you have incomplete tasks");
         }
 
         if (exchange.getUser1().getId().equals(userId)) {
@@ -276,12 +274,12 @@ public class ExchangeService {
 
     private UserSkill getUserSkill(Long userSkillId, Long userId) {
         return userSkillRepository.findByIdAndUserId(userSkillId, userId)
-                .orElseThrow(() -> new RuntimeException("Selected skill does not belong to the user"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selected skill does not belong to the user"));
     }
 
     private void validateSkillType(UserSkill userSkill, SkillType expectedType, String message) {
         if (userSkill.getSkillType() != expectedType) {
-            throw new RuntimeException(message);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
         }
     }
 
