@@ -15,56 +15,73 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
+
     private final JwtService jwtService;
     private final CookieService cookieService;
-    
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
         String token = getTokenFromCookie(request);
-        if(token == null){
-            filterChain.doFilter(request,response);
+
+        if (token == null) {
+            filterChain.doFilter(request, response);
             return;
         }
+
         try {
-            if (jwtService.isValidToken(token)) {
-
-                String email = jwtService.extractEmailFromToken(token);
-                String role = jwtService.extractRoleFromToken(token);
-
-                // Make sure request is not already authenticated
-                if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                    email,
-                                    null,
-                                    List.of(authority)
-                            );
-
-                    // Attach request details
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // Store authentication
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            }else {
+            if (!jwtService.isValidToken(token)) {
                 clearAuthentication(response);
+            } else {
+                authenticateRequest(request, token);
             }
-        }catch(Exception exception){
+        } catch (RuntimeException exception) {
             clearAuthentication(response);
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    private void authenticateRequest(HttpServletRequest request, String token) {
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            return;
+        }
+
+        String email = jwtService.extractEmailFromToken(token);
+        String role = jwtService.extractRoleFromToken(token);
+
+        if (email == null || email.isBlank() || role == null || role.isBlank()) {
+            SecurityContextHolder.clearContext();
+            return;
+        }
+
+        var authority = new SimpleGrantedAuthority("ROLE_" + role);
+        var authentication = new UsernamePasswordAuthenticationToken(
+                email,
+                null,
+                List.of(authority)
+        );
+
+        authentication.setDetails(
+                new WebAuthenticationDetailsSource().buildDetails(request)
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     private void clearAuthentication(HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookieService
-                .deleteAccessTokenCookie().toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                cookieService.deleteAccessTokenCookie().toString()
+        );
     }
 
     private String getTokenFromCookie(HttpServletRequest request) {
@@ -75,11 +92,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         for (Cookie cookie : cookies) {
-
             if ("accessToken".equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
+
         return null;
     }
 }
