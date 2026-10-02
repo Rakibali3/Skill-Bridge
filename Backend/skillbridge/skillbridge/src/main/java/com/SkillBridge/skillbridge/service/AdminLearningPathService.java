@@ -18,7 +18,9 @@ import com.SkillBridge.skillbridge.repository.SkillRepository;
 import com.SkillBridge.skillbridge.repository.UserSkillRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -44,7 +46,7 @@ public class AdminLearningPathService {
         }
 
         if(learningPathRepository.existsBySkillId(request.getSkillId())){
-            throw new RuntimeException("A learning path already exists for this skill");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A learning path already exists for this skill");
         }
 
         LearningPath learningPath = LearningPath.builder()
@@ -85,17 +87,17 @@ public class AdminLearningPathService {
     public LearningPathResponseDto updatePath(Long id, @Valid LearningPathRequestDto request) {
         LearningPath learningPath = getPathEntity(id);
         Skill skill = skillRepository.findById(request.getSkillId())
-                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Skill not found"));
 
         if (!skill.isActive()) {
-            throw new RuntimeException("Cannot use an inactive skill");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot use an inactive skill");
         }
 
         learningPathRepository.findBySkillId(skill.getId())
                 .ifPresent(existingPath -> {
 
                     if (!existingPath.getId().equals(id)) {
-                        throw new RuntimeException("A learning path already exists for this skill");
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "A learning path already exists for this skill");
                     }
                 });
 
@@ -127,7 +129,7 @@ public class AdminLearningPathService {
     public void activatePath(Long id) {
         LearningPath path = getPathEntity(id);
         if (!path.getSkill().isActive()) {
-            throw new RuntimeException("Cannot activate a path for an inactive skill");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot activate a path for an inactive skill");
         }
 
         path.setActive(true);
@@ -138,7 +140,7 @@ public class AdminLearningPathService {
     public LearningPathTopicResponseDto addTopic(Long pathId, @Valid LearningPathTopicRequestDto request) {
         LearningPath learningPath = getPathEntity(pathId);
         if (!learningPath.isActive()) {
-            throw new RuntimeException("Cannot add a topic to an inactive learning path");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot add a topic to an inactive learning path");
         }
         LearningPathTopic topic = LearningPathTopic.builder()
                 .learningPath(learningPath)
@@ -157,13 +159,13 @@ public class AdminLearningPathService {
     public LearningPathTopicResponseDto updateTopic(Long pathId, Long topicId, @Valid LearningPathTopicRequestDto request) {
         LearningPath learningPath = getPathEntity(pathId);
         if(!learningPath.isActive()){
-            throw new RuntimeException("cannot update topic in deactivated learning path");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cannot update topic in deactivated learning path");
         }
         LearningPathTopic topic = learningPathTopicRepository.findById(topicId)
-                        .orElseThrow(() -> new RuntimeException("Topic not found"));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found"));
 
         if (!topic.getLearningPath().getId().equals(pathId)) {
-            throw new RuntimeException("Topic does not belong to this learning path");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Topic does not belong to this learning path");
         }
 
         topic.setTitle(request.getTitle().trim());
@@ -205,14 +207,14 @@ public class AdminLearningPathService {
 
     private LearningPath getPathEntity(Long id) {
         return learningPathRepository.findById(id).orElseThrow(() ->
-                        new RuntimeException("Learning path not found"));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found"));
     }
 
     private LearningPathTopic getTopic(Long pathId, Long topicId) {
         LearningPathTopic topic = learningPathTopicRepository.findById(topicId).orElseThrow(()->
-                new RuntimeException("topic not found"));
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "topic not found"));
         if(!topic.getLearningPath().getId().equals(pathId)) {
-            throw new RuntimeException("Topic does not belong to this learning path");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Topic does not belong to this learning path");
         }
         return topic;
     }
