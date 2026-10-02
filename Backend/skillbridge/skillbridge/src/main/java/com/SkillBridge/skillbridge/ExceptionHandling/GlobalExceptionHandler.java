@@ -29,8 +29,12 @@ public class GlobalExceptionHandler {
             EmailAlreadyExistsException exception,
             HttpServletRequest request
     ) {
-        return build(HttpStatus.CONFLICT, exception.getMessage(), request,
-                Map.of("email", safeMessage(exception.getMessage(), "This email is already registered.")));
+        return build(
+                HttpStatus.CONFLICT,
+                safeMessage(exception.getMessage(), "This email is already registered."),
+                request,
+                Map.of("email", safeMessage(exception.getMessage(), "This email is already registered."))
+        );
     }
 
     @ExceptionHandler({
@@ -41,7 +45,11 @@ public class GlobalExceptionHandler {
             RuntimeException exception,
             HttpServletRequest request
     ) {
-        return build(HttpStatus.UNAUTHORIZED, safeMessage(exception.getMessage(), "Authentication failed."), request);
+        return build(
+                HttpStatus.UNAUTHORIZED,
+                safeMessage(exception.getMessage(), "Authentication failed."),
+                request
+        );
     }
 
     @ExceptionHandler(SkillNotFoundException.class)
@@ -77,12 +85,7 @@ public class GlobalExceptionHandler {
                 )
         );
 
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "Please correct the highlighted fields.",
-                request,
-                fieldErrors
-        );
+        return build(HttpStatus.BAD_REQUEST, "Please correct the highlighted fields.", request, fieldErrors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -113,8 +116,7 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
-        String message = "Invalid value for parameter '" + exception.getName() + "'.";
-        return build(HttpStatus.BAD_REQUEST, message, request);
+        return build(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + exception.getName() + "'.", request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -152,11 +154,13 @@ public class GlobalExceptionHandler {
     ) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
         String message = exception.getReason();
+
         if (message == null || message.isBlank()) {
             message = status.is4xxClientError()
                     ? "The request could not be completed."
                     : "Something went wrong. Please try again later.";
         }
+
         return build(status, message, request);
     }
 
@@ -165,10 +169,27 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException exception,
             HttpServletRequest request
     ) {
-        log.warn("Database constraint violation on {}: {}", request.getRequestURI(), exception.getMostSpecificCause().getMessage());
+        log.warn(
+                "Database constraint violation on {}: {}",
+                request.getRequestURI(),
+                exception.getMostSpecificCause().getMessage()
+        );
+
         return build(
                 HttpStatus.CONFLICT,
                 "The request conflicts with existing data. Check your input and try again.",
+                request
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException exception,
+            HttpServletRequest request
+    ) {
+        return build(
+                HttpStatus.BAD_REQUEST,
+                safeMessage(exception.getMessage(), "The request contains invalid data."),
                 request
         );
     }
@@ -208,6 +229,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(),
                 fieldErrors
         );
+
         return ResponseEntity.status(status).body(body);
     }
 
