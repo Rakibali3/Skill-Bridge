@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 
 import {
@@ -44,30 +44,17 @@ export default function UserProfilePage() {
     error: profileError,
   } = useProfileById(userId);
 
-
-  // =========================================================
-  // EXCHANGES
-  // =========================================================
-
   const {
     data: exchanges = [],
     isLoading: exchangesLoading,
   } = useMyExchanges();
 
 
-  // =========================================================
-  // CONNECTION REQUESTS
-  // =========================================================
-
   const {
     data: requests,
     isLoading: requestsLoading,
   } = useAllExchangeRequests();
 
-
-  // =========================================================
-  // LOADING
-  // =========================================================
 
   if (
     currentUserLoading ||
@@ -92,10 +79,6 @@ export default function UserProfilePage() {
   }
 
 
-  // =========================================================
-  // PROFILE ERROR
-  // =========================================================
-
   if (profileError || !user) {
 
     return (
@@ -117,10 +100,11 @@ export default function UserProfilePage() {
     );
   }
 
+  
+  if (currentUser && Number(currentUser.id) === Number(user.id)) {
+    return <Navigate to="/profile" replace />;
+  }
 
-  // =========================================================
-  // USER SKILLS
-  // =========================================================
 
   const skills = user.skills || [];
 
@@ -180,9 +164,6 @@ export default function UserProfilePage() {
       : null;
 
 
-  // =========================================================
-  // AVATAR
-  // =========================================================
 
   const avatar =
     user.avatarUrl ||
@@ -191,16 +172,9 @@ export default function UserProfilePage() {
     )}&background=6366f1&color=fff`;
 
 
-  // =========================================================
-  // RENDER
-  // =========================================================
 
   return (
     <DashboardLayout>
-
-      {/* ================================================= */}
-      {/* BACK BUTTON */}
-      {/* ================================================= */}
 
       <button
         type="button"

@@ -6,6 +6,7 @@ import com.SkillBridge.skillbridge.dto.ExchangeRequestResponseDto;
 import com.SkillBridge.skillbridge.entity.ExchangeRequest;
 import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.enums.ExchangeRequestStatus;
+import com.SkillBridge.skillbridge.enums.NotificationType;
 import com.SkillBridge.skillbridge.repository.ExchangeRequestRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ExchangeRequestService {
 
     private final ExchangeRequestRepository exchangeRequestRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public ExchangeRequestResponseDto sendRequest(Authentication authentication, ExchangeRequestDto request) {
 
@@ -58,6 +60,13 @@ public class ExchangeRequestService {
 
         ExchangeRequest saved = exchangeRequestRepository.save(exchangeRequest);
 
+        notificationService.createNotification(
+                receiver.getId(),
+                NotificationType.EXCHANGE_REQUEST,
+                "New exchange request",
+                sender.getUserName() + " sent you a connection request.",
+                "/exchanges"
+        );
         return convertToResponse(saved);
     }
 
@@ -101,6 +110,14 @@ public class ExchangeRequestService {
 
         ExchangeRequest updated = exchangeRequestRepository.save(request);
 
+        notificationService.createNotification(
+                request.getSender().getId(),
+                NotificationType.EXCHANGE_ACCEPTED,
+                "Exchange request accepted",
+                receiver.getUserName() + " accepted your request.",
+                "/exchanges"
+        );
+
         return convertToResponse(updated);
     }
 
@@ -119,6 +136,14 @@ public class ExchangeRequestService {
         request.setStatus(ExchangeRequestStatus.REJECTED);
 
         ExchangeRequest updated = exchangeRequestRepository.save(request);
+
+        notificationService.createNotification(
+                request.getSender().getId(),
+                NotificationType.EXCHANGE_REJECTED,
+                "Exchange request rejected",
+                receiver.getUserName() + " rejected your request.",
+                "/exchanges"
+        );
 
         return convertToResponse(updated);
     }

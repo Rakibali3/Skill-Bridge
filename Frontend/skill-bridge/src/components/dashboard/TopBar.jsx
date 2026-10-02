@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
     ArrowLeft,
-    Bell,
     ChevronDown,
     LogOut,
     Menu,
@@ -14,6 +13,7 @@ import {
     X,
     Loader2,
 } from "lucide-react";
+import NotificationBell from "../notifications/NotificationBell";
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -345,15 +345,7 @@ export default function TopBar({ onMenuClick }) {
                     )}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={() => navigate("/notifications")}
-                    className="relative rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100"
-                    aria-label="Notifications"
-                >
-                    <Bell size={20} />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-                </button>
+               <NotificationBell />
 
                 <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 

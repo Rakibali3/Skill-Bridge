@@ -7,6 +7,7 @@ import com.SkillBridge.skillbridge.entity.Exchange;
 import com.SkillBridge.skillbridge.entity.Task;
 import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.enums.ExchangeStatus;
+import com.SkillBridge.skillbridge.enums.NotificationType;
 import com.SkillBridge.skillbridge.enums.TaskStatus;
 import com.SkillBridge.skillbridge.repository.ExchangeRepository;
 import com.SkillBridge.skillbridge.repository.TaskRepository;
@@ -27,6 +28,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ExchangeRepository exchangeRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public TaskResponseDto createTask(
@@ -73,7 +75,19 @@ public class TaskService {
                 .status(TaskStatus.PENDING)
                 .build();
 
-        return convertToResponse(taskRepository.save(task));
+        Task savedTask = taskRepository.save(task);
+        String notificationLink = "/exchanges/" + savedTask.getExchange().getId();
+        notificationService.createNotification(
+                assignedUser.getId(),
+                NotificationType.TASK_ASSIGNED,
+                "New task assigned",
+                currentUser.getUserName()
+                        + " assigned you a task: "
+                        + savedTask.getTitle(),
+                notificationLink
+        );
+
+        return convertToResponse(savedTask);
     }
 
     @Transactional(readOnly = true)
@@ -155,14 +169,23 @@ public class TaskService {
         task.setStatus(TaskStatus.SUBMITTED);
         task.setSubmittedAt(LocalDateTime.now());
 
-        return convertToResponse(taskRepository.save(task));
+        Task savedTask = taskRepository.save(task);
+        String notificationLink = "/exchanges/" + savedTask.getExchange().getId();
+        notificationService.createNotification(
+                task.getCreatedBy().getId(),
+                NotificationType.TASK_SUBMITTED,
+                "Task submitted for review",
+                currentUser.getUserName()
+                        + " submitted the task: "
+                        + savedTask.getTitle(),
+                notificationLink
+        );
+
+        return convertToResponse(savedTask);
     }
 
     @Transactional
-    public TaskResponseDto completeTask(
-            Authentication authentication,
-            Long taskId
-    ) {
+    public TaskResponseDto completeTask(Authentication authentication, Long taskId) {
 
         User currentUser = getAuthenticatedUser(authentication);
 
@@ -186,7 +209,19 @@ public class TaskService {
         task.setStatus(TaskStatus.COMPLETED);
         task.setCompletedAt(LocalDateTime.now());
 
-        return convertToResponse(taskRepository.save(task));
+        Task savedTask = taskRepository.save(task);
+        String notificationLink = "/exchanges/" + savedTask.getExchange().getId();
+        notificationService.createNotification(
+                task.getAssignedTo().getId(),
+                NotificationType.TASK_COMPLETED,
+                "Task completed",
+                currentUser.getUserName()
+                        + " marked your task as completed: "
+                        + savedTask.getTitle(),
+                notificationLink
+        );
+
+        return convertToResponse(savedTask);
     }
 
     @Transactional(readOnly = true)

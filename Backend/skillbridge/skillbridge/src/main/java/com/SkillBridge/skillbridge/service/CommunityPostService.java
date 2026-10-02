@@ -52,6 +52,7 @@ public class CommunityPostService {
         return mapToResponse(savedPost);
     }
 
+    @Transactional(readOnly = true)
     public Page<CommunityPostResponseDto> getPosts(
             Authentication authentication,
             Long communityId,
@@ -67,10 +68,7 @@ public class CommunityPostService {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(
-                        Sort.Direction.DESC,
-                        "createdAt"
-                )
+                Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
         return communityPostRepository
@@ -81,6 +79,7 @@ public class CommunityPostService {
                 .map(this::mapToResponse);
     }
 
+    @Transactional
     public CommunityPostResponseDto updatePost(Authentication authentication, Long communityId, Long postId, @Valid CommunityPostRequestDto request) {
         User user = getAuthentication(authentication);
         getCommunity(communityId);

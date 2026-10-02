@@ -1,0 +1,15 @@
+package com.SkillBridge.skillbridge.enums;
+
+public enum NotificationType {
+    NEW_SKILL_MATCH,
+    EXCHANGE_REQUEST,
+    EXCHANGE_CREATED,
+    EXCHANGE_ACCEPTED,
+    EXCHANGE_REJECTED,
+    EXCHANGE_ACTIVATED,
+    TASK_ASSIGNED,
+    TASK_SUBMITTED,
+    TASK_COMPLETED,
+    LEARNING_PATH_CREATED,
+    LEARNING_PATH_UPDATED
+}

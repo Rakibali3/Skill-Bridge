@@ -1,8 +1,10 @@
 package com.SkillBridge.skillbridge.service;
 
 import com.SkillBridge.skillbridge.entity.Match;
+import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.entity.UserProfile;
 import com.SkillBridge.skillbridge.entity.UserSkill;
+import com.SkillBridge.skillbridge.enums.NotificationType;
 import com.SkillBridge.skillbridge.enums.SkillType;
 import com.SkillBridge.skillbridge.repository.MatchRepository;
 import com.SkillBridge.skillbridge.repository.UserProfileRepository;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +28,21 @@ public class MatchingService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final MatchRepository matchRepository;
+    private final NotificationService notificationService;
 
     public void refreshMatchesForUser(Long userId) {
-        List<UserSkill> currentUserSkills = userSkillRepository.findByUserId(userId);
 
-        // Remove old matches involving this user
+        List<UserSkill> currentUserSkills =
+                userSkillRepository.findByUserId(userId);
+
+        // Capture existing matches before deleting them.
+        Set<Long> previousMatchIds =
+                matchRepository.findByUserIdOrderByMatchScoreDesc(userId)
+                        .stream()
+                        .map(match -> match.getMatchedUser().getId())
+                        .collect(Collectors.toSet());
+
+        // Remove old matches involving this user.
         matchRepository.deleteByUserId(userId);
         matchRepository.deleteByMatchedUserId(userId);
         matchRepository.flush();
@@ -38,11 +51,20 @@ public class MatchingService {
             return;
         }
 
-        Set<Long> candidateUserIds = findCandidateUsers(userId, currentUserSkills);
+        Set<Long> candidateUserIds =
+                findCandidateUsers(userId, currentUserSkills);
 
         for (Long matchedUserId : candidateUserIds) {
+
+            boolean isNewMatch =
+                    !previousMatchIds.contains(matchedUserId);
+
             calculateAndSaveMatch(userId, matchedUserId);
             calculateAndSaveMatch(matchedUserId, userId);
+
+            if (isNewMatch) {
+                notifyNewMatch(userId, matchedUserId);
+            }
         }
     }
 
@@ -89,5 +111,34 @@ public class MatchingService {
                 .build();
 
         matchRepository.save(match);
+    }
+
+    private void notifyNewMatch(Long userId, Long matchedUserId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found: " + userId));
+
+        User matchedUser = userRepository.findById(matchedUserId)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found: " + matchedUserId));
+
+        notificationService.createNotification(
+                user.getId(),
+                NotificationType.NEW_SKILL_MATCH,
+                "New skill match found!",
+                "You have a new skill match with "
+                        + matchedUser.getUserName() + ".",
+                "/matches"
+        );
+
+        notificationService.createNotification(
+                matchedUser.getId(),
+                NotificationType.NEW_SKILL_MATCH,
+                "New skill match found!",
+                "You have a new skill match with "
+                        + user.getUserName() + ".",
+                "/matches"
+        );
     }
 }

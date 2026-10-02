@@ -117,7 +117,6 @@ export default function DashBoard() {
     refetch: refetchTasks,
   } = useTasksByUser(userId);
 
-    console.log(tasks);
 
 
   const {
@@ -271,7 +270,7 @@ export default function DashBoard() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
+              {/* <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
                 {profileImage ? (
                   <img
                     src={profileImage}
@@ -283,7 +282,7 @@ export default function DashBoard() {
                     {profileInitial}
                   </span>
                 )}
-              </div>
+              </div> */}
 
               <button
                 type="button"

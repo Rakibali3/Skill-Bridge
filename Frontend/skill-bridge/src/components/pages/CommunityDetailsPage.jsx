@@ -71,6 +71,7 @@ export default function CommunityDetailsPage() {
         ) ?? [];
 
 
+
     const {
         data: currentUser,
     } = useProfileData();

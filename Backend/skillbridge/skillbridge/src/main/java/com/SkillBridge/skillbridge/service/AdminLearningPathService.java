@@ -9,15 +9,21 @@ import com.SkillBridge.skillbridge.dto.LearningPathTopicResponseDto;
 import com.SkillBridge.skillbridge.entity.LearningPath;
 import com.SkillBridge.skillbridge.entity.LearningPathTopic;
 import com.SkillBridge.skillbridge.entity.Skill;
+import com.SkillBridge.skillbridge.entity.UserSkill;
+import com.SkillBridge.skillbridge.enums.NotificationType;
+import com.SkillBridge.skillbridge.enums.SkillType;
 import com.SkillBridge.skillbridge.repository.LearningPathRepository;
 import com.SkillBridge.skillbridge.repository.LearningPathTopicRepository;
 import com.SkillBridge.skillbridge.repository.SkillRepository;
+import com.SkillBridge.skillbridge.repository.UserSkillRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +32,8 @@ public class AdminLearningPathService {
     private final LearningPathRepository learningPathRepository;
     private final LearningPathTopicRepository learningPathTopicRepository;
     private final SkillRepository skillRepository;
+    private final UserSkillRepository userSkillRepository;
+    private final NotificationService notificationService;
 
     public LearningPathResponseDto createPath(@Valid LearningPathRequestDto request) {
         Skill skill = skillRepository.findById(request.getSkillId())
@@ -47,6 +55,15 @@ public class AdminLearningPathService {
                 .build();
 
         LearningPath saved = learningPathRepository.save(learningPath);
+
+        notifyLearnersAboutPath(
+                saved,
+                NotificationType.LEARNING_PATH_CREATED,
+                "New learning path available",
+                "A new learning path for "
+                        + saved.getSkill().getName()
+                        + " is now available."
+        );
 
         return mapPath(saved);
     }
@@ -87,6 +104,15 @@ public class AdminLearningPathService {
         learningPath.setDescription(clean(request.getDescription()));
 
         LearningPath saved = learningPathRepository.save(learningPath);
+
+        notifyLearnersAboutPath(
+                saved,
+                NotificationType.LEARNING_PATH_UPDATED,
+                "Learning path updated",
+                "The learning path for "
+                        + saved.getSkill().getName()
+                        + " has been updated."
+        );
 
         return mapPath(saved);
 
@@ -226,6 +252,38 @@ public class AdminLearningPathService {
         String cleaned = value.trim();
 
         return cleaned.isEmpty() ? null : cleaned;
+    }
+
+    private void notifyLearnersAboutPath(
+            LearningPath learningPath,
+            NotificationType type,
+            String title,
+            String message
+    ) {
+        List<UserSkill> learners =
+                userSkillRepository.findBySkillIdAndSkillType(
+                        learningPath.getSkill().getId(),
+                        SkillType.LEARN
+                );
+
+        Set<Long> notifiedUserIds = new HashSet<>();
+
+        for (UserSkill userSkill : learners) {
+
+            Long recipientId = userSkill.getUser().getId();
+
+            if (!notifiedUserIds.add(recipientId)) {
+                continue;
+            }
+
+            notificationService.createNotification(
+                    recipientId,
+                    type,
+                    title,
+                    message,
+                    "/learning-paths/" + learningPath.getId()
+            );
+        }
     }
 
 }

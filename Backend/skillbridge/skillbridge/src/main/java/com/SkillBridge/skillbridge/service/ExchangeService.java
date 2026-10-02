@@ -27,6 +27,7 @@ public class ExchangeService {
     private final UserSkillRepository userSkillRepository;
     private final UserProfileRepository userProfileRepository;
     private final TaskRepository taskRepository;
+    private final NotificationService notificationService;
 
     public ExchangeResponseDto createExchange(
             Authentication authentication,
@@ -166,6 +167,15 @@ public class ExchangeService {
                 partner,
                 partnerLearningSkill.getSkill(),
                 ExchangeSkillDirection.LEARN
+        );
+
+        notificationService.createNotification(
+                partner.getId(),
+                NotificationType.EXCHANGE_CREATED,
+                "New skill exchange",
+                currentUser.getUserName()
+                        + " started a skill exchange with you.",
+                "/exchanges/" + savedExchange.getId()
         );
 
         return convertToResponse(savedExchange);
