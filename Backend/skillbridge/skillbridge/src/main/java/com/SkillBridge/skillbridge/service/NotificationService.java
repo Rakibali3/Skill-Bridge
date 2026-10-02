@@ -8,7 +8,9 @@ import com.SkillBridge.skillbridge.repository.NotificationRepository;
 import com.SkillBridge.skillbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,7 +32,7 @@ public class NotificationService {
 
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() ->
-                        new RuntimeException("Notification recipient not found"));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification recipient not found"));
 
         Notification notification = Notification.builder()
                 .recipient(recipient)
@@ -72,7 +74,7 @@ public class NotificationService {
         Notification notification = notificationRepository
                 .findByIdAndRecipient_Id(notificationId, recipientId)
                 .orElseThrow(() ->
-                        new RuntimeException("Notification not found"));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
 
         notification.setRead(true);
     }
