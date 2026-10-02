@@ -21,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -38,7 +40,7 @@ public class CommunityService {
         User user = getAuthenticatedUser(authentication);
         String name = requestDto.getName().trim();
         if(communityRepository.existsByNameIgnoreCase(name)){
-            throw new RuntimeException("A community with this name already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A community with this name already exists");
         }
         Community community = Community.builder()
                 .name(name)
@@ -98,16 +100,16 @@ public class CommunityService {
 
         CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndUserId(
                 communityId,user.getId()
-        ).orElseThrow(()-> new RuntimeException("Your not member of this community"));
+        ).orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your not member of this community"));
 
         if(communityMember.getRole() != CommunityMemberRole.OWNER){
-            throw new RuntimeException("Only the community owner can update the community");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the community owner can update the community");
         }
         String name = requestDto.getName().trim();
 
         if (!community.getName().equalsIgnoreCase(name)
                 && communityRepository.existsByNameIgnoreCase(name)) {
-            throw new RuntimeException("A community with this name already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A community with this name already exists");
         }
 
         community.setName(name);
@@ -132,11 +134,11 @@ public class CommunityService {
                 communityMemberRepository
                         .findByCommunityIdAndUserId(communityId, user.getId())
                         .orElseThrow(() ->
-                                new RuntimeException("You are not a member of this community")
+                                new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this community")
                         );
 
         if (membership.getRole() != CommunityMemberRole.OWNER) {
-            throw new RuntimeException("Only the community owner can delete the community");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the community owner can delete the community");
         }
 
         // Soft delete
@@ -152,7 +154,7 @@ public class CommunityService {
             boolean alreadyMember = communityMemberRepository
                     .existsByCommunityIdAndUserId(communityId,user.getId());
         if (alreadyMember) {
-            throw new RuntimeException("You are already a member of this community");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "You are already a member of this community");
         }
         CommunityMember member = CommunityMember.builder()
                 .community(community)
@@ -170,9 +172,9 @@ public class CommunityService {
         Community community = getActiveCommunity(communityId);
         CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndUserId(
                 communityId,user.getId()
-        ).orElseThrow(()-> new RuntimeException("You are not a member of this community"));
+        ).orElseThrow(()-> new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this community"));
        if(communityMember.getRole() == CommunityMemberRole.OWNER){
-           throw new RuntimeException("Community owner cannot leave the community");
+           throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Community owner cannot leave the community");
        }
        communityMemberRepository.deleteByCommunityIdAndUserId(communityId,user.getId());
     }
@@ -194,7 +196,7 @@ public class CommunityService {
                 communityId,
                 currentUser.getId()
         )) {
-            throw new RuntimeException("Join the community to view its members");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Join the community to view its members");
         }
 
         Pageable pageable = PageRequest.of(
@@ -233,7 +235,7 @@ public class CommunityService {
     }
 
     private Community getActiveCommunity(Long communityId) {
-        return communityRepository.findByIdAndActiveTrue(communityId).orElseThrow(()-> new RuntimeException("community not found"));
+        return communityRepository.findByIdAndActiveTrue(communityId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "community not found"));
     }
     private User getAuthenticatedUser(Authentication authentication) {
         String email = authentication.getName();
