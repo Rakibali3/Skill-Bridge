@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.dto.NotificationResponseDto;
 import com.SkillBridge.skillbridge.entity.Notification;
 import com.SkillBridge.skillbridge.entity.User;
@@ -30,7 +32,7 @@ public class NotificationService {
 
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() ->
-                        new RuntimeException("Notification recipient not found"));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification recipient not found"));
 
         Notification notification = Notification.builder()
                 .recipient(recipient)
@@ -72,7 +74,7 @@ public class NotificationService {
         Notification notification = notificationRepository
                 .findByIdAndRecipient_Id(notificationId, recipientId)
                 .orElseThrow(() ->
-                        new RuntimeException("Notification not found"));
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
 
         notification.setRead(true);
     }
