@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import api from "../../../../API/axios";
+import getApiErrorMessage from "../../../../assets/utils/getApiErrorMessage";
 import {
   validateUserName,
   validateEmail,
@@ -126,13 +127,9 @@ export default function SignupPage() {
           email: serverErrors.email || "",
           password: serverErrors.password || "",
         });
-        if (serverErrors.general) setGeneralError(serverErrors.general);
+        setGeneralError(getApiErrorMessage(error, "Unable to create your account. Please try again."));
       } else {
-        setGeneralError(
-          serverErrors
-            ? "Something went wrong. Please try again."
-            : "Unable to connect to the server. Please check your connection."
-        );
+        setGeneralError(getApiErrorMessage(error, "Unable to create your account. Please try again."));
       }
     } finally {
       setLoading(false);
