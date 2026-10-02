@@ -10,7 +10,9 @@ import com.SkillBridge.skillbridge.repository.LearningPathTopicRepository;
 import com.SkillBridge.skillbridge.repository.UserLearningPathRepository;
 import com.SkillBridge.skillbridge.repository.UserLearningPathTopicRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -34,10 +36,10 @@ public class UserLearningPathService {
         User user = userService.getCurrentUser();
 
         LearningPath learningPath = learningPathRepository.findById(learningPathId)
-                .orElseThrow(() -> new RuntimeException("Learning path not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Learning path not found"));
 
         if (!learningPath.isActive()) {
-            throw new RuntimeException("This learning path is currently inactive");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This learning path is currently inactive");
         }
 
         UserLearningPath userLearningPath = userLearningPathRepository
@@ -66,7 +68,7 @@ public class UserLearningPathService {
 
         UserLearningPath userLearningPath = userLearningPathRepository
                         .findByUserIdAndLearningPathId(user.getId(), learningPathId)
-                        .orElseThrow(() -> new RuntimeException("You have not started this learning path"));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have not started this learning path"));
 
         syncTopicProgress(userLearningPath);
 
@@ -81,14 +83,14 @@ public class UserLearningPathService {
 
         UserLearningPath userLearningPath = userLearningPathRepository
                 .findByUserIdAndLearningPathId(user.getId(), learningPathId)
-                .orElseThrow(() -> new RuntimeException("You have not started this learning path"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have not started this learning path"));
 
         UserLearningPathTopic topicProgress = userLearningPathTopicRepository
                 .findByUserLearningPathIdAndLearningPathTopicId(userLearningPath.getId(), topicId)
-                .orElseThrow(() -> new RuntimeException("Topic not found in this learning path"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found in this learning path"));
 
         if (!topicProgress.getLearningPathTopic().isActive()) {
-            throw new RuntimeException("This topic is currently inactive");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This topic is currently inactive");
         }
 
         if (topicProgress.getStatus() == LearningPathProgressStatus.NOT_STARTED) {
@@ -108,14 +110,14 @@ public class UserLearningPathService {
 
         UserLearningPath userLearningPath = userLearningPathRepository
                 .findByUserIdAndLearningPathId(user.getId(), learningPathId)
-                .orElseThrow(() -> new RuntimeException("You have not started this learning path"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have not started this learning path"));
 
         UserLearningPathTopic topicProgress = userLearningPathTopicRepository
                 .findByUserLearningPathIdAndLearningPathTopicId(userLearningPath.getId(), topicId)
-                .orElseThrow(() -> new RuntimeException("Topic not found in this learning path"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found in this learning path"));
 
         if (!topicProgress.getLearningPathTopic().isActive()) {
-            throw new RuntimeException("This topic is currently inactive");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This topic is currently inactive");
         }
 
         topicProgress.setStatus(LearningPathProgressStatus.COMPLETED);
