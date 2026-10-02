@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
 import com.SkillBridge.skillbridge.dto.CommunityCommentRequestDto;
 import com.SkillBridge.skillbridge.dto.CommunityCommentResponseDto;
@@ -45,20 +47,18 @@ public class CommunityCommentService {
         CommunityPost post = postRepository
                 .findByIdAndCommunityId(postId, communityId)
                 .orElseThrow(() ->
-                        new RuntimeException("Post not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found")
                 );
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
                 );
 
         String content = request.getContent().trim();
 
         if (content.isEmpty()) {
-            throw new RuntimeException(
-                    "Comment cannot be empty"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment cannot be empty");
         }
 
         CommunityComment comment = CommunityComment.builder()
@@ -88,7 +88,7 @@ public class CommunityCommentService {
         postRepository
                 .findByIdAndCommunityId(postId, communityId)
                 .orElseThrow(() ->
-                        new RuntimeException("Post not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found")
                 );
 
         return commentRepository
@@ -120,23 +120,17 @@ public class CommunityCommentService {
                                 postId
                         )
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Comment not found"
-                                )
+                                new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found")
                         );
 
         if (!comment.getAuthor().getId().equals(userId)) {
-            throw new RuntimeException(
-                    "You can only edit your own comment"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own comment");
         }
 
         String content = request.getContent().trim();
 
         if (content.isEmpty()) {
-            throw new RuntimeException(
-                    "Comment cannot be empty"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment cannot be empty");
         }
 
         comment.setContent(content);
@@ -165,15 +159,11 @@ public class CommunityCommentService {
                                 postId
                         )
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Comment not found"
-                                )
+                                new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found")
                         );
 
         if (!comment.getAuthor().getId().equals(userId)) {
-            throw new RuntimeException(
-                    "You can only delete your own comment"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own comment");
         }
 
         commentRepository.delete(comment);
@@ -192,9 +182,7 @@ public class CommunityCommentService {
                         );
 
         if (!member) {
-            throw new RuntimeException(
-                    "You must be a community member"
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must be a community member");
         }
     }
 
