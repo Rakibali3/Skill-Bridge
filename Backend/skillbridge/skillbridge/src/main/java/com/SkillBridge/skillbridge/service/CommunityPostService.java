@@ -1,5 +1,7 @@
 package com.SkillBridge.skillbridge.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.SkillBridge.skillbridge.ExceptionHandling.AuthenticatedUserNotFoundException;
 import com.SkillBridge.skillbridge.dto.CommunityPostRequestDto;
 import com.SkillBridge.skillbridge.dto.CommunityPostResponseDto;
@@ -86,10 +88,10 @@ public class CommunityPostService {
         verifyMember(user.getId(),communityId);
         CommunityPost post = communityPostRepository.findByIdAndCommunityId(postId, communityId).orElse(null);
         if (post == null) {
-            throw new RuntimeException("post is not available");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "post is not available");
         }
         if (!post.getAuthor().getId().equals(user.getId())) {
-            throw new RuntimeException("You can only edit your own posts");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own posts");
         }
 
         String content = request.getContent().trim();
@@ -109,10 +111,10 @@ public class CommunityPostService {
         verifyMember(user.getId(),communityId);
         CommunityPost post = communityPostRepository.findByIdAndCommunityId(postId, communityId).orElse(null);
         if (post == null) {
-            throw new RuntimeException("post is not available");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "post is not available");
         }
         if (!post.getAuthor().getId().equals(user.getId())) {
-            throw new RuntimeException("only authors of the post can delete it");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "only authors of the post can delete it");
         }
         communityPostRepository.deleteById(postId);
     }
@@ -141,13 +143,13 @@ public class CommunityPostService {
     private void verifyMember(Long id, Long communityId) {
         boolean isMember = communityMemberRepository.existsByCommunityIdAndUserId(communityId, id);
         if (!isMember) {
-            throw new RuntimeException("You must be a community member");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must be a community member");
         }
     }
 
     private Community getCommunity(Long communityId) {
         return communityRepository.findByIdAndActiveTrue(communityId)
-                .orElseThrow(()->new RuntimeException("community not found"));
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "community not found"));
     }
 
     private User getAuthentication(Authentication authentication) {
