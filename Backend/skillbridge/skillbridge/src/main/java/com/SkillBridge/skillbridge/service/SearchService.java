@@ -7,7 +7,9 @@ import com.SkillBridge.skillbridge.entity.User;
 import com.SkillBridge.skillbridge.entity.UserProfile;
 import com.SkillBridge.skillbridge.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -97,7 +99,7 @@ public class SearchService {
     private String getAvatarUrl(Long id) {
         UserProfile userProfile = userProfileRepository.findByUserId(id).orElse(null);
         if (userProfile == null) {
-            throw new RuntimeException("user not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found");
         }
         return  userProfile.getAvatarUrl();
     }
