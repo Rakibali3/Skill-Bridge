@@ -2,12 +2,19 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * SkillBridge theme tokens.
+ * Prefer component-level dark: classes for special surfaces and badges.
+ * These safe defaults cover the common Tailwind slate utilities used across
+ * existing pages so legacy components remain readable in both themes.
+ */
 @layer utilities {
   .dark body,
   .dark .bg-slate-50,
   .dark .bg-slate-50\/50,
-  .dark .bg-slate-50\/70 {
-    background-color: #0f172a;
+  .dark .bg-slate-50\/70,
+  .dark .bg-slate-50\/80 {
+    background-color: #0b1220;
   }
 
   .dark .bg-white,
@@ -19,9 +26,14 @@
     background-color: #1e293b;
   }
 
+  .dark .bg-slate-200 {
+    background-color: #334155;
+  }
+
+  .dark .text-slate-950,
   .dark .text-slate-900,
   .dark .text-slate-800 {
-    color: #e2e8f0;
+    color: #f1f5f9;
   }
 
   .dark .text-slate-700,
@@ -34,13 +46,25 @@
     color: #94a3b8;
   }
 
+  .dark .text-slate-300 {
+    color: #cbd5e1;
+  }
+
+  .dark .text-indigo-800,
+  .dark .text-indigo-700,
+  .dark .text-indigo-600 {
+    color: #a5b4fc;
+  }
+
+  .dark .border-slate-50,
   .dark .border-slate-100,
   .dark .border-slate-200,
   .dark .border-slate-300 {
     border-color: #334155;
   }
 
-  .dark .divide-slate-100 > :not(:last-child) {
+  .dark .divide-slate-100 > :not(:last-child),
+  .dark .divide-slate-200 > :not(:last-child) {
     border-color: #334155;
   }
 
@@ -48,7 +72,65 @@
   .dark textarea,
   .dark select {
     background-color: #0f172a;
+    color: #f1f5f9;
+    border-color: #475569;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  /* Hover surfaces: keep foreground and background contrast aligned. */
+  .dark .hover\:bg-white:hover {
+    background-color: #1e293b;
+  }
+
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-100:hover,
+  .dark .hover\:bg-slate-200:hover {
+    background-color: #263449;
+  }
+
+  .dark .hover\:text-slate-900:hover,
+  .dark .hover\:text-slate-800:hover {
+    color: #ffffff;
+  }
+
+  .dark .hover\:text-slate-700:hover,
+  .dark .hover\:text-slate-600:hover {
     color: #e2e8f0;
-    border-color: #334155;
+  }
+
+  .dark .hover\:bg-indigo-50:hover,
+  .dark .hover\:bg-indigo-100:hover {
+    background-color: #252b55;
+  }
+
+  .dark .hover\:text-indigo-700:hover,
+  .dark .hover\:text-indigo-800:hover,
+  .dark .hover\:text-indigo-600:hover {
+    color: #c7d2fe;
+  }
+
+  .dark .hover\:bg-emerald-50:hover {
+    background-color: #12372f;
+  }
+
+  .dark .hover\:bg-red-50:hover {
+    background-color: #451f2a;
+  }
+
+  .dark .hover\:text-red-600:hover {
+    color: #fca5a5;
+  }
+
+  .dark .focus\:bg-white:focus {
+    background-color: #111c30;
+  }
+
+  .dark .focus\:ring-indigo-50:focus,
+  .dark .focus\:ring-indigo-100:focus {
+    --tw-ring-color: rgb(99 102 241 / 0.25);
   }
 }
