@@ -15,8 +15,7 @@
     background-color: #111c30;
   }
 
-  .dark .bg-slate-100,
-  .dark .hover\\:bg-slate-100:hover {
+  .dark .bg-slate-100 {
     background-color: #1e293b;
   }
 
