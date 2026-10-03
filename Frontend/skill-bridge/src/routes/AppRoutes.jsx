@@ -8,7 +8,6 @@ import MySkillsPage from "../components/pages/MySkillsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import FindMatchesPage from "../components/pages/FindMatchesPage";
 import UserProfilePage from "../components/pages/UserProfilePage";
-import IncomingRequestsPage from "../components/pages/IncomingRequestsPage";
 import MyExchangesPage from "../components/pages/MyExchangesPage";
 import ExchangeWorkspacePage from "../components/pages/ExchangeWorkspacePage";
 import ChatPage from "../components/pages/ChatPage";
@@ -23,6 +22,7 @@ import LearningJourneyPage from "../components/pages/LearningJourneyPage";
 import LearningPathsPage from "../components/pages/LearningPathsPage";
 import NotificationsPage from "../components/pages/NotificationsPage";
 import HelpSupportPage from "../components/pages/Helpsupportpage";
+import IncomingRequestsPage from "../components/pages/Incomingrequestspage";
 
 
 function AppRoutes() {
