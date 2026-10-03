@@ -80,8 +80,8 @@ public class NotificationService {
     }
 
     @Transactional
-    public int markAllAsRead(Long recipientId) {
-        return notificationRepository.markAllAsRead(recipientId);
+    public void markAllAsRead(Long recipientId) {
+        notificationRepository.markAllAsRead(recipientId);
     }
 
     private NotificationResponseDto toDto(Notification notification) {

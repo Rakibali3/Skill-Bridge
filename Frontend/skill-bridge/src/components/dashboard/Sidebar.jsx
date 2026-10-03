@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate}  from "react-router-dom";
 import {
   X,
   Repeat2,
@@ -10,10 +10,12 @@ import {
   UsersRound,
   Route,
   Bell,
-  Settings,
+  BadgeQuestionMark,
 } from "lucide-react";
 
 export default function Sidebar({ isOpen, onClose }) {
+  const navigate = useNavigate();
+
   const menuItems = [
     {
       label: "Dashboard",
@@ -177,21 +179,24 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </nav>
 
-        {/* Settings */}
+        {/* help-support */}
         <div className="border-t border-slate-100 p-4">
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-slate-50">
+          <button
+            onClick={() => {
+              navigate("/help-support");
+              onClose();
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-slate-50 cursor-pointer" 
+          >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-              <Settings size={18} className="text-slate-500" />
+              <BadgeQuestionMark size={18} className="text-slate-500" />
             </div>
 
             <div>
               <p className="text-sm font-semibold text-slate-700">
-                Settings
+                Help/Support
               </p>
 
-              <p className="text-xs text-slate-400">
-                Manage account
-              </p>
             </div>
           </button>
         </div>

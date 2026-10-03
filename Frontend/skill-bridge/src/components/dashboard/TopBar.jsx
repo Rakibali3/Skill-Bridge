@@ -393,25 +393,13 @@ export default function TopBar({ onMenuClick }) {
                                 My Profile
                             </NavLink>
 
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setProfileOpen(false);
-                                    navigate("/settings");
-                                }}
-                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50"
-                            >
-                                <Settings size={17} />
-                                Settings
-                            </button>
-
                             <div className="my-1 border-t border-slate-100" />
 
                             <button
                                 type="button"
                                 onClick={handleLogout}
                                 disabled={isLoggingOut}
-                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                             >
                                 {isLoggingOut ? (
                                     <Loader2 size={17} className="animate-spin" />

@@ -22,6 +22,7 @@ import AdminLearningPathDetailsPage from "../components/pages/admin/AdminLearnin
 import LearningJourneyPage from "../components/pages/LearningJourneyPage";
 import LearningPathsPage from "../components/pages/LearningPathsPage";
 import NotificationsPage from "../components/pages/NotificationsPage";
+import HelpSupportPage from "../components/pages/Helpsupportpage";
 
 
 function AppRoutes() {
@@ -48,6 +49,7 @@ function AppRoutes() {
         <Route path="/learning-paths" element={<LearningPathsPage />}/>
         <Route path="/learning-paths/:pathId" element={<LearningJourneyPage />}/>
         <Route path="/notifications" element={<NotificationsPage />}/>
+        <Route path="/help-support" element={<HelpSupportPage />} />
       </Route>
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboardPage />} />

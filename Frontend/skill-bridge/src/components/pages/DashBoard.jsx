@@ -145,9 +145,11 @@ export default function DashBoard() {
     ? exchanges
     : exchanges?.content ?? [];
 
-  const matchList = Array.isArray(matches)
+  const matcheData = Array.isArray(matches)
     ? matches
     : matches?.content ?? [];
+
+  const matchList = matcheData.filter((match) => match.matchScore >= 85);
 
   const learningPathList = Array.isArray(learningPaths)
     ? learningPaths

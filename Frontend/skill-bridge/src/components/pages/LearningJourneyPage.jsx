@@ -135,6 +135,14 @@ function TopicCard({
                             <ExternalLink size={13} />
                         </a>
                     )}
+                    {topic.resourceUrl && inactive && (
+                        <div
+                            className={`mt-3 inline-flex items-center gap-1 text-sm font-semibold text-red-600 ${align === "right" ? "sm:flex-row-reverse" : ""
+                                }`}
+                        >
+                            Topic is unavailable right now
+                        </div>
+                    )}
                 </div>
 
                 {!inactive && (
@@ -261,16 +269,6 @@ export default function LearningJourneyPage() {
     const isCompleted = learningPath.status === "COMPLETED";
     const isStarted = learningPath.status !== "NOT_STARTED";
     const isBusy = startTopic.isPending || completeTopic.isPending;
-
-    // How far down the zigzag spine the colored "progress" overlay should
-    // reach, roughly aligned with the vertical position of the last
-    // completed step (assumes steps are spaced fairly evenly).
-    const spineFillPercent =
-        totalTopics > 1
-            ? (completedCount / (totalTopics - 1)) * 100
-            : completedCount > 0
-                ? 100
-                : 0;
 
     return (
         <DashboardLayout>
@@ -405,25 +403,21 @@ export default function LearningJourneyPage() {
                         </div>
 
                         <div className="relative">
-                            {/* Spine — a single vertical line all steps hang off. On mobile
-                                it sits on the left; on sm+ it moves to the horizontal
-                                center so steps can alternate left/right like a winding
-                                road. */}
-                            {topics.length > 1 && (
-                                <>
-                                    <div className="absolute bottom-6 top-6 left-6 w-0.5 -translate-x-1/2 rounded-full bg-slate-200 sm:left-1/2" />
-                                    <div
-                                        className="absolute top-6 left-6 w-0.5 -translate-x-1/2 rounded-full bg-indigo-500 transition-all duration-700 sm:left-1/2"
-                                        style={{ height: `calc(${spineFillPercent}% )` }}
-                                    />
-                                </>
-                            )}
-
                             <div className="flex flex-col gap-8 sm:gap-10">
                                 {topics.map((topic, index) => {
                                     const visuals = getStepVisuals(topic);
                                     const Icon = visuals.icon;
                                     const isLeft = index % 2 === 0;
+
+                                    // Per-step line segments
+                                    const isFirst = index === 0;
+                                    const isLast = index === topics.length - 1;
+                                    const nextTopic = topics[index + 1];
+
+                                    // Segment above this circle is coloured if this step is completed.
+                                    // Segment below this circle is coloured if the next step is completed.
+                                    const upperDone = topic.status === "COMPLETED";
+                                    const lowerDone = nextTopic?.status === "COMPLETED";
 
                                     const circle = (
                                         <div
@@ -451,6 +445,22 @@ export default function LearningJourneyPage() {
                                             id={`topic-${topic.topicId}`}
                                             className="relative flex items-start gap-4 sm:items-center sm:gap-0"
                                         >
+                                            {/* Line segment: previous circle down to this circle */}
+                                            {!isFirst && (
+                                                <div
+                                                    className={`absolute left-6 top-0 h-6 w-0.5 -translate-x-1/2 sm:left-1/2 sm:h-1/2 ${upperDone ? "bg-indigo-500" : "bg-slate-200"
+                                                        }`}
+                                                />
+                                            )}
+
+                                            {/* Line segment: this circle down to the next circle */}
+                                            {!isLast && (
+                                                <div
+                                                    className={`absolute left-6 top-6 -bottom-8 w-0.5 -translate-x-1/2 sm:left-1/2 sm:top-1/2 sm:-bottom-10 ${lowerDone ? "bg-indigo-500" : "bg-slate-200"
+                                                        }`}
+                                                />
+                                            )}
+
                                             {/* ---- Mobile layout: icon + card in a row ---- */}
                                             <div className="shrink-0 sm:hidden">{circle}</div>
                                             <div className="min-w-0 flex-1 sm:hidden">{card}</div>
