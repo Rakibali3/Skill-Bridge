@@ -7,14 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,38 +22,94 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig {
-//    private final UserDetailsService userDetailsService;
 
     private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
-      return httpSecurity
-              .csrf(csrfConfig -> csrfConfig.disable())
-              .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-              .authorizeHttpRequests(requests -> requests
-                      .requestMatchers(HttpMethod.POST, "/signup").permitAll()
-                      .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                      .requestMatchers("/admin/**").hasRole("ADMIN")
-                      .requestMatchers("/ws/**").permitAll()
-                      .anyRequest().authenticated())
-              .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-              .logout(logout -> logout.disable())
-              .exceptionHandling(exception -> exception
-                              // Not authenticated
-                              .authenticationEntryPoint(
-                                      (request, response, authException) ->
-                                              response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authentication required")
-                              )
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity httpSecurity) throws Exception {
 
-                              // Authenticated but not authorized
-                              .accessDeniedHandler(
-                                      (request, response, accessDeniedException) ->
-                                              response.sendError(HttpStatus.FORBIDDEN.value(), "Access denied")
-                              )
-              )
-              .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-              .build();
+        return httpSecurity
+                .csrf(csrf -> csrf.disable())
+
+                .cors(cors ->
+                        cors.configurationSource(corsConfigurationSource()))
+
+                .authorizeHttpRequests(requests -> requests
+                        // Allow browser preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public endpoints
+                        .requestMatchers(HttpMethod.POST, "/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+
+                        // Admin endpoints
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // All other endpoints require authentication
+                        .anyRequest().authenticated()
+                )
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
+
+                .logout(logout -> logout.disable())
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
+                                (request, response, authException) ->
+                                        response.sendError(
+                                                HttpStatus.UNAUTHORIZED.value(),
+                                                "Authentication required")
+                        )
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) ->
+                                        response.sendError(
+                                                HttpStatus.FORBIDDEN.value(),
+                                                "Access denied")
+                        )
+                )
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class)
+
+                .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Deployed frontend and local development
+        configuration.setAllowedOrigins(List.of(
+                "https://skill-bridge-pi-seven.vercel.app",
+                "http://localhost:5173"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of("*"));
+
+        // Required for cookie-based authentication
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
     @Bean
@@ -68,55 +118,7 @@ public class WebConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
-
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH",
-                        "OPTIONS"
-                )
-        );
-
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
-
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
-        return source;
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
     }
-
-//    @Bean
-//    public AuthenticationProvider authenticationProvider(){
-//        return new DaoAuthenticationProvider(userDetailsService);
-//    }
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration){
-//        return configuration.getAuthenticationManager();
-//    }
-     @Bean
-     public ModelMapper modelMapper() {
-          return new ModelMapper();
-     }
-
 }
