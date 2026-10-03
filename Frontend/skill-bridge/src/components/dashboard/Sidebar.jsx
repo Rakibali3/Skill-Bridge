@@ -168,9 +168,6 @@ export default function Sidebar({ isOpen, onClose }) {
 
                       <span>{item.label}</span>
 
-                      {item.label === "Notifications" && (
-                        <span className="ml-auto h-2 w-2 rounded-full bg-red-500" />
-                      )}
                     </>
                   )}
                 </NavLink>
