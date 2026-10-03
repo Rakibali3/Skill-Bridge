@@ -1,26 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../API/axios";
 
-// Fetch notifications
 async function fetchNotifications(page = 0, size = 20) {
     const response = await api.get("/notifications", {
         params: { page, size },
     });
-
     return response.data;
 }
 
-// Fetch unread notification count
 async function fetchUnreadCount() {
     const response = await api.get("/notifications/unread-count");
-
-    // Supports either a raw number or { unreadCount: number }
     return typeof response.data === "number"
         ? response.data
         : response.data.unreadCount ?? response.data.count ?? 0;
 }
 
-// Fetch notification list
 export function useNotifications(page = 0, size = 20) {
     return useQuery({
         queryKey: ["notifications", page, size],
@@ -28,17 +22,13 @@ export function useNotifications(page = 0, size = 20) {
     });
 }
 
-// Fetch unread count and refresh periodically
 export function useUnreadNotificationCount() {
     return useQuery({
         queryKey: ["notification-unread-count"],
         queryFn: fetchUnreadCount,
-        refetchInterval: 30000,
-        refetchOnWindowFocus: true,
     });
 }
 
-// Mark one notification as read
 export function useMarkNotificationAsRead() {
     const queryClient = useQueryClient();
 
@@ -49,16 +39,18 @@ export function useMarkNotificationAsRead() {
             );
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        onSuccess: (_, notificationId) => {
+            queryClient.invalidateQueries({
+                queryKey: ["notifications"],
+            });
             queryClient.invalidateQueries({
                 queryKey: ["notification-unread-count"],
+                exact: true,
             });
         },
     });
 }
 
-// Mark all notifications as read
 export function useMarkAllNotificationsAsRead() {
     const queryClient = useQueryClient();
 
@@ -68,10 +60,13 @@ export function useMarkAllNotificationsAsRead() {
             return response.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
             queryClient.invalidateQueries({
-                queryKey: ["notification-unread-count"],
+                queryKey: ["notifications"],
             });
+            queryClient.setQueryData(
+                ["notification-unread-count"],
+                0
+            );
         },
     });
 }
