@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import './index.css'
 import App from './App.jsx'
+import { ThemeProvider } from './assets/theme/ThemeContext.jsx'
 
 // Create a query client instance with optimal caching defaults
 const queryClient = new QueryClient({
@@ -19,9 +20,11 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')).render(
   <StrictMode> 
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter> 
-        <App /> 
-      </BrowserRouter> 
+      <ThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>
 )
