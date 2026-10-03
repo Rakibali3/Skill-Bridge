@@ -6,54 +6,42 @@ import {
 
 import api from "../../API/axios";
 
-
 // Send request
 export function useSendExchangeRequest() {
-
     const queryClient = useQueryClient();
 
     return useMutation({
-
         mutationFn: async (receiverId) => {
-
             const { data } = await api.post(
                 "/exchange-requests",
-                {
-                    receiverId,
-                }
+                { receiverId }
             );
-
             return data;
         },
-
-        onSuccess: () => {
-
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
                 queryKey: ["exchange-requests", "sent"],
+                exact: true,
             });
 
+            if (data) {
+                queryClient.invalidateQueries({
+                    queryKey: ["notification-unread-count"],
+                    exact: true,
+                });
+            }
         },
-
     });
 }
 
-
 // Get sent requests
 export function useSentExchangeRequests() {
-
     return useQuery({
-
         queryKey: ["exchange-requests", "sent"],
-
         queryFn: async () => {
-
-            const { data } = await api.get(
-                "/exchange-requests/sent"
-            );
-
+            const { data } = await api.get("/exchange-requests/sent");
             return data;
         },
-
     });
 }
 
@@ -64,71 +52,65 @@ export function useReceivedExchangeRequests() {
             const { data } = await api.get("/exchange-requests/received");
             return data;
         },
-        refetchInterval: 30000, 
     });
 }
-
 
 // Accept a received request
 export function useAcceptExchangeRequest() {
-
     const queryClient = useQueryClient();
 
     return useMutation({
-
         mutationFn: async (requestId) => {
-
             const { data } = await api.post(
                 `/exchange-requests/${requestId}/accept`
             );
-
             return data;
         },
-
         onSuccess: () => {
-
             queryClient.invalidateQueries({
                 queryKey: ["exchange-requests", "received"],
+                exact: true,
             });
-
             queryClient.invalidateQueries({
                 queryKey: ["exchange-requests", "sent"],
+                exact: true,
             });
-
+            queryClient.invalidateQueries({
+                queryKey: ["exchanges"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["notification-unread-count"],
+                exact: true,
+            });
         },
-
     });
 }
 
-
 // Reject a received request
 export function useRejectExchangeRequest() {
-
     const queryClient = useQueryClient();
 
     return useMutation({
-
         mutationFn: async (requestId) => {
-
             const { data } = await api.post(
                 `/exchange-requests/${requestId}/reject`
             );
-
             return data;
         },
-
         onSuccess: () => {
-
             queryClient.invalidateQueries({
                 queryKey: ["exchange-requests", "received"],
+                exact: true,
             });
-
             queryClient.invalidateQueries({
                 queryKey: ["exchange-requests", "sent"],
+                exact: true,
             });
-
+            queryClient.invalidateQueries({
+                queryKey: ["notification-unread-count"],
+                exact: true,
+            });
         },
-
     });
 }
 
