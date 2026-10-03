@@ -6,7 +6,6 @@ import {
     LogOut,
     Menu,
     Search,
-    Settings,
     User,
     UserRoundArrowLeft,
     Users,

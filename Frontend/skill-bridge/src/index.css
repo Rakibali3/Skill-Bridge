@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer utilities {
+  /* Dark theme backgrounds */
   .dark body,
   .dark .bg-slate-50,
   .dark .bg-slate-50\/50,
@@ -19,9 +20,10 @@
     background-color: #1e293b;
   }
 
+  /* Dark theme text */
   .dark .text-slate-900,
   .dark .text-slate-800 {
-    color: #e2e8f0;
+    color: #f1f5f9;
   }
 
   .dark .text-slate-700,
@@ -34,6 +36,7 @@
     color: #94a3b8;
   }
 
+  /* Borders */
   .dark .border-slate-100,
   .dark .border-slate-200,
   .dark .border-slate-300 {
@@ -44,11 +47,18 @@
     border-color: #334155;
   }
 
+  /* Form controls */
   .dark input,
   .dark textarea,
   .dark select {
     background-color: #0f172a;
     color: #e2e8f0;
-    border-color: #334155;
+    border-color: #475569;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #94a3b8;
   }
 }
+
