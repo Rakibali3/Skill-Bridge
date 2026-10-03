@@ -62,7 +62,7 @@ export default function IncomingRequestsPage() {
     if (isLoading) {
         return (
             <DashboardLayout>
-                <div className="flex min-h-[500px] items-center justify-center">
+                <div className="flex min-h-125 items-center justify-center">
                     <Loader2 size={36} className="animate-spin text-indigo-600" />
                 </div>
             </DashboardLayout>
