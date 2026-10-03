@@ -15,10 +15,10 @@ public class CookieService {
         return ResponseCookie
                 .from(ACCESS_TOKEN, token)
                 .httpOnly(true)
-                .secure(false) // true in production with HTTPS
+                .secure(true)
                 .path("/")
                 .maxAge(Duration.ofMillis(expiry))
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 
@@ -27,10 +27,10 @@ public class CookieService {
         return ResponseCookie
                 .from(ACCESS_TOKEN, "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(Duration.ZERO)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 }
