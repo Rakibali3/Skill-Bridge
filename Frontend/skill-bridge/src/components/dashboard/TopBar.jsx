@@ -12,8 +12,11 @@ import {
     Users,
     X,
     Loader2,
+    Moon,
+    Sun,
 } from "lucide-react";
 import NotificationBell from "../notifications/NotificationBell";
+import { useTheme } from "../../assets/theme/ThemeContext";
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -157,6 +160,7 @@ function SearchResultsBody({ isSearching, results, onSelect }) {
 export default function TopBar({ onMenuClick }) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { theme, toggleTheme } = useTheme();
 
     /* ---------------- profile ---------------- */
 
@@ -345,7 +349,16 @@ export default function TopBar({ onMenuClick }) {
                     )}
                 </button>
 
-               <NotificationBell />
+               <button
+                    type="button"
+                    onClick={toggleTheme}
+                    aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+                    title={theme === "dark" ? "Light theme" : "Dark theme"}
+                    className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-100"
+                >
+                    {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+                </button>
+                <NotificationBell />
 
                 <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 
