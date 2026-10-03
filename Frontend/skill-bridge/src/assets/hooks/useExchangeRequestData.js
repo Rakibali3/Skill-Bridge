@@ -52,6 +52,8 @@ export function useReceivedExchangeRequests() {
             const { data } = await api.get("/exchange-requests/received");
             return data;
         },
+        refetchInterval: 60000,
+        refetchIntervalInBackground: false,
     });
 }
 
