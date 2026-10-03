@@ -15,10 +15,11 @@ async function fetchUnreadCount() {
         : response.data.unreadCount ?? response.data.count ?? 0;
 }
 
-export function useNotifications(page = 0, size = 20) {
+export function useNotifications(page = 0, size = 20, enabled = true) {
     return useQuery({
         queryKey: ["notifications", page, size],
         queryFn: () => fetchNotifications(page, size),
+        enabled,
     });
 }
 
@@ -26,6 +27,8 @@ export function useUnreadNotificationCount() {
     return useQuery({
         queryKey: ["notification-unread-count"],
         queryFn: fetchUnreadCount,
+        refetchInterval: 60000,
+        refetchIntervalInBackground: false,
     });
 }
 
