@@ -12,7 +12,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // Cache data for 5 minutes before background refetching
-      refetchOnWindowFocus: false, // Prevents unnecessary re-fetches on tab switches
+      refetchOnWindowFocus: false, // Mutations explicitly refresh affected data
+      retry: 1, // Avoid repeated retries for the same failed request
     },
   },
 })
