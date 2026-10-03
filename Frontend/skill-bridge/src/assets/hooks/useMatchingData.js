@@ -8,6 +8,5 @@ export function useMatchingData() {
       const { data } = await api.get("/matches");
       return data;
     },
-     refetchOnMount: "always",
   });
 }
