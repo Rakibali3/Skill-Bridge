@@ -73,7 +73,7 @@ export default function NotificationBell() {
     data: notificationData,
     isLoading,
     isError,
-  } = useNotifications(0, 5);
+  } = useNotifications(0, 5, isOpen);
 
   const { data: unreadCount = 0 } =
     useUnreadNotificationCount();
