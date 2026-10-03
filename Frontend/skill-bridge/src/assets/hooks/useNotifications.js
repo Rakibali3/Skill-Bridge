@@ -42,7 +42,7 @@ export function useMarkNotificationAsRead() {
             );
             return response.data;
         },
-        onSuccess: (_, notificationId) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["notifications"],
             });
