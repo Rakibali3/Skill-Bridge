@@ -20,8 +20,19 @@ export function useMyLearningPath(pathId) {
             );
             return response.data;
         },
-        enabled: !!pathId,
-        refetchOnWindowFocus: true,
+        enabled: Boolean(pathId),
+    });
+}
+
+function updateLearningPathCaches(queryClient, data, pathId) {
+    const id = Number(pathId);
+
+    if (data) {
+        queryClient.setQueryData(["my-learning-path", id], data);
+    }
+
+    queryClient.invalidateQueries({
+        queryKey: ["learning-paths"],
     });
 }
 
@@ -35,28 +46,10 @@ export function useStartLearningPath() {
             );
             return response.data;
         },
-
-        onSuccess: async (data, pathId) => {
-            const id = Number(pathId);
-
-            queryClient.setQueryData(
-                ["my-learning-path", id],
-                data
-            );
-
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ["my-learning-path", id],
-                    exact: true,
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ["learning-paths"],
-                }),
-            ]);
+        onSuccess: (data, pathId) => {
+            updateLearningPathCaches(queryClient, data, pathId);
         },
     });
-
-
 }
 
 export function useStartLearningTopic() {
@@ -69,27 +62,10 @@ export function useStartLearningTopic() {
             );
             return response.data;
         },
-
-        onSuccess: async (data, variables) => {
-            const id = Number(variables.pathId);
-
-            queryClient.setQueryData(
-                ["my-learning-path", id],
-                data
-            );
-
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ["my-learning-path", id],
-                    exact: true,
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ["learning-paths"],
-                }),
-            ]);
+        onSuccess: (data, variables) => {
+            updateLearningPathCaches(queryClient, data, variables.pathId);
         },
     });
-
 }
 
 export function useCompleteLearningTopic() {
@@ -102,25 +78,8 @@ export function useCompleteLearningTopic() {
             );
             return response.data;
         },
-
-        onSuccess: async (data, variables) => {
-            const id = Number(variables.pathId);
-
-            queryClient.setQueryData(
-                ["my-learning-path", id],
-                data
-            );
-
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ["my-learning-path", id],
-                    exact: true,
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ["learning-paths"],
-                }),
-            ]);
+        onSuccess: (data, variables) => {
+            updateLearningPathCaches(queryClient, data, variables.pathId);
         },
     });
-
 }
