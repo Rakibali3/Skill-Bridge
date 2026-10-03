@@ -2,13 +2,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * SkillBridge theme tokens.
+ * Prefer component-level dark: classes for special surfaces and badges.
+ * These safe defaults cover the common Tailwind slate utilities used across
+ * existing pages so legacy components remain readable in both themes.
+ */
 @layer utilities {
   /* Dark theme backgrounds */
   .dark body,
   .dark .bg-slate-50,
   .dark .bg-slate-50\/50,
-  .dark .bg-slate-50\/70 {
-    background-color: #0f172a;
+  .dark .bg-slate-50\/70,
+  .dark .bg-slate-50\/80 {
+    background-color: #0b1220;
   }
 
   .dark .bg-white,
@@ -20,7 +27,6 @@
     background-color: #1e293b;
   }
 
-  /* Dark theme text */
   .dark .text-slate-900,
   .dark .text-slate-800 {
     color: #f1f5f9;
@@ -36,14 +42,14 @@
     color: #94a3b8;
   }
 
-  /* Borders */
   .dark .border-slate-100,
   .dark .border-slate-200,
   .dark .border-slate-300 {
     border-color: #334155;
   }
 
-  .dark .divide-slate-100 > :not(:last-child) {
+  .dark .divide-slate-100 > :not(:last-child),
+  .dark .divide-slate-200 > :not(:last-child) {
     border-color: #334155;
   }
 
@@ -52,13 +58,35 @@
   .dark textarea,
   .dark select {
     background-color: #0f172a;
-    color: #e2e8f0;
+    color: #f1f5f9;
     border-color: #475569;
   }
 
   .dark input::placeholder,
   .dark textarea::placeholder {
     color: #94a3b8;
+  }
+
+  /* Hover surfaces: keep foreground and background contrast aligned. */
+  .dark .hover\:bg-white:hover {
+    background-color: #1e293b;
+  }
+
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-100:hover,
+  .dark .hover\:bg-slate-200:hover {
+    background-color: #263449;
+  }
+
+  .dark .hover\:text-slate-900:hover,
+  .dark .hover\:text-slate-800:hover {
+    color: #ffffff;
+  }
+
+  .dark .hover\:text-slate-700:hover,
+  .dark .hover\:text-slate-600:hover {
+    color: #e2e8f0;
+    border-color: #334155;
   }
 }
 
