@@ -8,6 +8,8 @@ export function useProfileData() {
             const { data } = await api.get("/profile");
             return data;
         },
+        retry: false,
+        refetchOnWindowFocus: false,
     });
 }
 
@@ -34,6 +36,7 @@ export function useUpdateProfile() {
             if (data) {
                 queryClient.setQueryData(["profile"], data);
             }
+
             queryClient.invalidateQueries({
                 queryKey: ["matches"],
             });
