@@ -12,8 +12,7 @@ public class CookieService {
 
     public ResponseCookie createAccessTokenCookie(String token, long expiry) {
 
-        return ResponseCookie
-                .from(ACCESS_TOKEN, token)
+        return ResponseCookie.from(ACCESS_TOKEN, token)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
