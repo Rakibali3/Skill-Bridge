@@ -62,7 +62,7 @@ public class WebConfig {
 
                                 .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                                
+
                                 .anyRequest().authenticated()
                 )
 

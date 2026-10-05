@@ -1,13 +1,12 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
-const WS_URL = "http://localhost:8082/ws";
+const WS_URL = import.meta.env.VITE_API_BASE_URL;
 
 export function createChatClient({
     onConnect,
     onError,
 }) {
-
     const client = new Client({
 
         webSocketFactory: () => {
@@ -21,10 +20,7 @@ export function createChatClient({
         },
 
         onConnect: () => {
-
-            console.log(
-                "WebSocket connected"
-            );
+            console.log("WebSocket connected");
 
             if (onConnect) {
                 onConnect(client);
@@ -32,7 +28,6 @@ export function createChatClient({
         },
 
         onStompError: (frame) => {
-
             console.error(
                 "STOMP error:",
                 frame.headers["message"]
@@ -44,7 +39,6 @@ export function createChatClient({
         },
 
         onWebSocketError: (error) => {
-
             console.error(
                 "WebSocket error:",
                 error
@@ -56,10 +50,7 @@ export function createChatClient({
         },
 
         onDisconnect: () => {
-
-            console.log(
-                "WebSocket disconnected"
-            );
+            console.log("WebSocket disconnected");
         },
     });
 
